@@ -1,0 +1,2 @@
+class conn:
+    pass
