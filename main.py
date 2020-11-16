@@ -16,7 +16,7 @@ class handleSocket():
     def start(self, host: str, port: int):
         if not self._check_port(port):
             print('Invalid port')
-            return false
+            return False
         print("Starting socket")
         self.skt = server(int(port), host)
         self.skt.start()
@@ -24,7 +24,7 @@ class handleSocket():
     def connect(self, host: str, port: int):
         if not self._check_port(port):
             print('Invalid port')
-            return false
+            return False
         print("Trying to connect")
         self.skt = conn(host, int(port))
 
