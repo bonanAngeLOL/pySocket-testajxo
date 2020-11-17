@@ -1,6 +1,6 @@
 venv/
 venv/*
 .vim/*
+.idea/*
 *.swp
 *.pyc
-.idea/*
