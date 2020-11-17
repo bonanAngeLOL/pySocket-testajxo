@@ -3,3 +3,4 @@ venv/*
 .vim/*
 *.swp
 *.pyc
+.idea/*
