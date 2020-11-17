@@ -2,7 +2,7 @@ import sys
 from server.start import server
 from client.conn import conn
 
-     
+
 class handleSocket():
 
     skt: object
@@ -27,6 +27,7 @@ class handleSocket():
             return False
         print("Trying to connect")
         self.skt = conn(host, int(port))
+        return self.skt.connect()
 
     def send(self, messages: list):
         if isinstance(self.skt, conn):
@@ -53,15 +54,15 @@ if __name__ == "__main__":
     elif sys.argv[1] == 'start' and nargs == 4:
         hskt.start(sys.argv[2], sys.argv[3])
     elif sys.argv[1] == 'connect' and nargs == 4:
-        hskt.connect(sys.argv[2], sys.argv[3])
-        hskt.send(messages)
+        if hskt.connect(sys.argv[2], sys.argv[3]):
+            hskt.send(messages)
+        else:
+            print("Unable to Connect\n\tTry another port or address")
     else:
         print("Invalid action \n required: [start | connect] ")
 
 
 """
 ToDo:
-    Close port directly from function or specify conexion as a class attribute
     Clean this code
-    Add catching errors for unavailable ports
 """

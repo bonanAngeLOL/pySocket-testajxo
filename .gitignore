@@ -1,3 +1,5 @@
 venv/
 venv/*
 .vim/*
+*.swp
+*.pyc
