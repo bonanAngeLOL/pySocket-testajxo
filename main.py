@@ -31,13 +31,11 @@ class handleSocket():
 
     def send(self, messages: list):
         if isinstance(self.skt, conn):
-            print('hand ',messages)
             self.skt.send(messages)
 
 
 if __name__ == "__main__":
     messages = list(range(1,16))
-    print(messages)
     messages.append("stop")
     nargs = len(sys.argv)
     if nargs == 1 or nargs > 4:

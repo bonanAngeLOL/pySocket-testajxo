@@ -46,14 +46,6 @@ class server:
             else:
                 break
 
-    """
-    def start(self):
-        self.skt.bind((self.host, self.port))
-        self.skt.listen()
-        conexion, direccion = self.skt.accept()
-        self.__listening(conexion)
-    """
-
     def start(self):
         self.skt.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
