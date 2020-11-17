@@ -1,5 +1,5 @@
 import socket
-
+import logging 
 
 class conn:
 
@@ -9,11 +9,13 @@ class conn:
             self, 
             host: str, 
             port: int, 
+            logger: logging.Logger = logging.getLogger(),
             skt: socket.socket  = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             ):
         self.host = host
         self.port = port
         self.__skt = skt
+        self.__logger = logger
 
     def __del__(self):
         if not self.__status:
@@ -33,7 +35,7 @@ class conn:
         try:
             self.__skt.connect((self.host, self.port))
             self.__status = True
-            print("connected")
+            self.__logger.debug("connected")
         except OSError:
             self.__status = False
         return self.__status
@@ -42,8 +44,8 @@ class conn:
         for message in messages:
             message = str(message)
             self.__skt.sendall(message.encode("utf8"))
-            print(f"Sent:\t{message}")
+            self.__logger.debug("Sent:\t%s", message)
             data = self.__skt.recv(1024)
-            print(f"Received:\t{data}\n")
+            self.__logger.debug("Received:\t%s\n", data)
         return True
 

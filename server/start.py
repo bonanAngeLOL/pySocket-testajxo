@@ -2,7 +2,7 @@
     Clase para manejar el servidor
 """
 import socket
-
+import logging
 
 class server:
     """
@@ -15,6 +15,7 @@ class server:
                 self,
                 port: int,
                 host: str = '127.0.0.1',
+                logger: logging.Logger = logging.getLogger(),
                 skt: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 ):
         self.port = port
@@ -22,6 +23,7 @@ class server:
         self.skt = skt
         self.__conexion: socket.socket
         self.__direccion: tuple
+        self.__logger = logger
 
     def _del__(self):
         if not self.__status:
@@ -36,11 +38,11 @@ class server:
         self.__conexion.sendall(message.encode("utf8"))
 
     def __listening(self):
-        print("Connecting: ", self.__conexion)
+        self.__logger.debug("Connecting: %s", self.__conexion)
         while True:
             data = self.__conexion.recv(1024).decode("utf8")
             if data != 'stop':
-                print(f"Received: {data}")
+                self.__logger.debug("Received: %s",data)
                 data = str(int(data) + 15) if data.isdigit() else data
                 self.__respond(data)
             else:
@@ -51,10 +53,10 @@ class server:
         try:
             self.skt.bind((self.host, self.port))
         except (OSError, PermissionError):
-            print("Port unavailable\n\t"+
-                    "Either you don't have permission or port is already in use.\n"
-                    "Try a different port!"
-                 )
+            message = """Port unavailable\n\t
+                         Either you don't have permission or port is already in use.\n
+                         Try a different port!"""
+            self.__logger.debug("%s", message)
             return False
         self.skt.listen()
         self.__conexion, self.__direccion = self.skt.accept()
