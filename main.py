@@ -22,7 +22,7 @@ class HandleSocket:
     """
         Esta clase solo es para manejar las clases start y conn
     """
-    skt: object
+    __skt: object
     __logger: logging.Logger
 
     def __init__(self, _logger: logging.Logger = logging.getLogger()):
@@ -51,8 +51,8 @@ class HandleSocket:
             self.__logger.debug('Invalid port')
             return False
         self.__logger.debug("Starting socket")
-        self.skt = Server(int(port), host, self.__logger)
-        self.skt.start()
+        self.__skt = Server(int(port), host, self.__logger)
+        self.__skt.start()
 
     def connect(self, host: str, port: int):
         """
@@ -65,8 +65,8 @@ class HandleSocket:
             self.__logger.debug('Invalid port')
             return False
         self.__logger.debug("Trying to connect")
-        self.skt = Conn(host, int(port), self.__logger)
-        return self.skt.connect()
+        self.__skt = Conn(host, int(port), self.__logger)
+        return self.__skt.connect()
 
     def send(self, messages: list):
         """
@@ -74,8 +74,8 @@ class HandleSocket:
         una instancia de conn
         @param messages: list
         """
-        if isinstance(self.skt, Conn):
-            self.skt.send(messages)
+        if isinstance(self.__skt, Conn):
+            self.__skt.send(messages)
 
 
 if __name__ == "__main__":

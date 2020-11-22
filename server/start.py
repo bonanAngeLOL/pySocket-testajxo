@@ -28,7 +28,7 @@ class Server:
         self.__direccion: tuple
         self.__logger = logger
 
-    def _del__(self):
+    def __del__(self):
         """
         Cierra el socket si sigue activo
         @return:
