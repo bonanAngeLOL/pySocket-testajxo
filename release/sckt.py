@@ -108,6 +108,7 @@ class Server:
         if not self.__status:
             return False
         self.__stop()
+        return True
 
     def __stop(self):
         """
