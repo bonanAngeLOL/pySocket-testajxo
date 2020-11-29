@@ -17,7 +17,6 @@ Para iniciar el servidor
 Para conectar al servidor
     python main.py connect [ip_servidor] [puerto] [usuario] [contraseña]
 
-
 El Código está desordenado por que aun estaba haciendo pruebas con el envío
 
 El usuario se conecta al servidor y lo guarda en la lista de usuarios, luego 

@@ -1,0 +1,2 @@
+class SocketManage:
+    pass

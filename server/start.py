@@ -5,10 +5,12 @@ import socket
 import logging
 import json
 import sys
+import os
 from concurrent.futures import ThreadPoolExecutor
 from os import path
-sys.path.append(path.dirname(path.abspath(__file__)))
+sys.path.append(os.getcwd())
 from utils.user import User
+from utils.auth import Auth
 
 class Server:
     """
@@ -40,19 +42,13 @@ class Server:
         Cierra el socket si sigue activo
         @return:
         """
-        if not self.__status:
-            return False
         self.__skt.close()
-        return True
-
-    #def __stop(self, conn):
-    #    """
-    #    Cierra el socket
-    #    """
-    #    self.__conexion.shutdown(0)
-    #    self.__conexion.close()
 
     def __get_all_users(self) -> str:
+        """
+        Lista de usuarios que han iniciado sesión
+        @return str
+        """
         return json.dumps({'users':(list(self.__usuarios.keys()))})
 
     def __broadcast(self, message: str):
@@ -60,6 +56,7 @@ class Server:
         Envia un mensaje a todos los usuarios
         @param message: str
         """
+        message = (message+'\0').encode("utf8")
         for user in self.__usuarios:
             print(self.__usuarios[user])
             self.__usuarios[user].get_conn().send(message)
@@ -228,6 +225,6 @@ class Server:
             self.__logger.debug("%s", message)
             return False
         self.__skt.listen(10)
-        with ThreadPoolExecutor(max_workers=1) as executor:
+        with ThreadPoolExecutor(max_workers=10) as executor:
             self.__listening(executor)
         return True
