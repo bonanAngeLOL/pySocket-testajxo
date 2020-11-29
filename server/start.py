@@ -5,45 +5,10 @@ import socket
 import logging
 import json
 import sys
-import time
 from concurrent.futures import ThreadPoolExecutor
-
-class User:
-    """
-    Clase usuario
-    """
-    def __init__(self, username: str, password: str, token: str, addr: str, conn: socket.socket):
-        self.__username = username
-        self.__password = password
-        self.__token = token
-        self.__addr = addr
-        self.__conn = conn
-
-    def get_token(self) -> str:
-        """
-        Returns session token
-        @return str
-        """
-        return self.__token
-
-    def get_addr(self) -> str:
-        """
-        Returns addr
-        """
-        return self.__addr
-
-    def get_conn(self) -> socket.socket:
-        """
-        Returns conn
-        """
-        return self.__conn
-
-    def get_username(self) -> str:
-        """
-        Return username
-        """
-        return self.__username
-
+from os import path
+sys.path.append(path.dirname(path.abspath(__file__)))
+from utils.user import User
 
 class Server:
     """
