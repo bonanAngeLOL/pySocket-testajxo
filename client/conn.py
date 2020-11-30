@@ -117,7 +117,7 @@ class Conn:
         """
         while True:
             from_server = self.__get_stream(self.__skt)
-            print(f"received: \n_______\n{from_server}\n_______\n\n")
+            print(f"received from server: \n_______\n{from_server}\n_______\n\n")
             # Implement actions when something is received
 
     def __command_cycle(self):

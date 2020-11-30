@@ -45,12 +45,12 @@ python main.py connect [server_ip] [port] [user] [password]
 - [x] Establish connection user - server
 - [x] Runnable by console command
 - [x] Use bidirectional communication from client app
-- [ ] User to user communication
-- [ ] Detect user disconnection
-- [ ] Change print to logger
+- [X] User to user communication
+- [ ] Add public key encryption
 - [ ] Set user db 
 - [ ] Add auth 
-- [ ] Add public key encryption
+- [ ] Detect user disconnection
+- [ ] Change print to logger
 - [ ] Use SQlite on client
 - [ ] Add actions on received info from server (in client)
 - [ ] Qt Interfaces

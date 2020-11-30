@@ -4,6 +4,8 @@
 import json
 import logging
 import socket
+import sys
+import os
 from concurrent.futures import ThreadPoolExecutor
 
 from utils.user import User
@@ -141,16 +143,26 @@ class Server:
         @param data: dict
         @return str
         """
-        if data["command"] == "send":
-            message = {"sender": username, "message": data["message"]}
-            self.send_to(
-                            message,
-                            self.__usuarios[data["recipient"]].get_conn()
-                        )
-            return "done"
-        if data["command"] == "stop":
-            conn.close()
-            return "closed"
+        print("command received")
+        try:
+            print("casting command")
+            if data["command"] == "send":
+                print("sending")
+                message = {"sender": username, "message": data["message"]}
+                print("message formed")
+                self.send_to(
+                                message,
+                                self.__usuarios[data["recipient"]].get_conn()
+                            )
+                print("message sent")
+                return "done"
+            if data["command"] == "stop":
+                print("closing")
+                conn.close()
+                return "closed"
+        except:
+            print("Error !!!! : ", sys.exc_info()[0])
+        print("getting out from commander")
         return "invalid argument"
 
     def send_to(self, info: dict, recipient: socket.socket) -> bool:
@@ -178,12 +190,14 @@ class Server:
             print("sent keepalive")
             print("Waiting for response")
             message = user_conn.recv(2048).decode("utf8")
-            print(message)
+            print("Received from client", message)
             try:
+                print("Trying to access to commander")
                 data = json.loads(message)
-                self.__user_command(data, user_conn, user_conn.get_username())
-            except json.decoder.JSONDecodeError:
-                print("Error!")
+                print("json loaded from message", data)
+                self.__user_command(data, user_conn, user.get_username())
+            except:
+                print("Error !!!! : ", sys.exc_info()[0])
                 continue
 
     def __listening(self, executor: object):
