@@ -2,7 +2,7 @@ import json
 import logging
 import socket
 import sys
-
+from concurrent.futures import ThreadPoolExecutor
 
 class Conn:
     """
@@ -70,7 +70,7 @@ class Conn:
         for message in received:
             if len(message) < 0:
                 continue
-            print("Message to form", message)
+            print("Message identified", message)
             try:
                 json_mess = json.loads(message)
             except Exception:
@@ -111,6 +111,23 @@ class Conn:
             self.__skt.send(json.dumps(emmit).encode("utf8"))
             print("Sent!")
 
+    def __waiting_response(self):
+        """
+        Ciclo para recibir información del servidor
+        """
+        while True:
+            from_server = self.__get_stream(self.__skt)
+            print(f"received: \n_______\n{from_server}\n_______\n\n")
+            # Implement actions when something is received
+
+    def __command_cycle(self):
+        print("Write a command")
+        while True:
+            command = input("babilu > ")
+            if command == 'exit':
+                break
+            self.__commander(command)
+
     def connect(self) -> bool:
         """
         Intenta conectarse al socket por host y puerto
@@ -118,6 +135,7 @@ class Conn:
         @return: bool
         """
         try:
+            print("Waiting for response")
             self.__skt.connect((self.host, self.port))
             if not self.__auth_step():
                 print("Auth failed")
@@ -126,13 +144,10 @@ class Conn:
             self.__logger.debug("connected")
         except OSError:
             self.__status = False
-        while True:
-            from_server = self.__get_stream(self.__skt)
-            print("received", from_server)
-            command = input("Enter a command\n")
-            if command == 'exit':
-                break
-            self.__commander(command)
+            return False
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            executor.submit(self.__waiting_response)
+            executor.submit(self.__command_cycle)
         return self.__status
 
     def send(self, messages: list):
