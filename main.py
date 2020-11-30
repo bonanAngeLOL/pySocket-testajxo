@@ -19,16 +19,17 @@ Para conectar al servidor
 
 El Código está desordenado por que aun estaba haciendo pruebas con el envío
 
-El usuario se conecta al servidor y lo guarda en la lista de usuarios, luego 
+El usuario se conecta al servidor y lo guarda en la lista de usuarios, luego
 notifica a los demás usuarios la lista de usuarios conectados.
 
 El usuario puede ingresar desde consola la opción para enviar mensajes
 
 """
-import sys
 import logging
-from server.start import Server
+import sys
+
 from client.conn import Conn
+from server.start import Server
 
 
 class HandleSocket:
@@ -92,12 +93,13 @@ class HandleSocket:
         @param _messages: list
         """
         if isinstance(self.__skt, Conn):
-            self.__skt.send(_messages)
+            # self.__skt.send(_messages)
+            pass
 
 
 if __name__ == "__main__":
 
-    messages = list(range(1,16))
+    messages = list(range(1, 16))
     messages.append("stop")
 
     logging.basicConfig(level=logging.DEBUG, format="\t%(message)s")
@@ -112,7 +114,8 @@ if __name__ == "__main__":
         logger.debug("\tAction\tAction of socket: start | connect ")
         logger.debug("\tHost\tHostname or IP")
         logger.debug("\tPort\tServer port number")
-        logger.debug("Connect to port:\n\tsocket.py connect Host Port user password")
+        logger.debug("""Connect to port:\n\t"
+                    "socket.py connect Host Port user password""")
         logger.debug("Start a server:\n\tsocket.py start Host Port max_users")
     elif sys.argv[1] == 'start' and NARGS == 4:
         hskt.start(sys.argv[2], sys.argv[3])
@@ -123,7 +126,6 @@ if __name__ == "__main__":
             logger.debug("Unable to Connect\n\tTry another port or address")
     else:
         logger.debug("Invalid action \n required: [start | connect] ")
-
 
         """
         TODO:

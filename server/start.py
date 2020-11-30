@@ -1,10 +1,11 @@
 """
     Este archivo contiene la clase que manejara los sockets
 """
-import socket
-import logging
 import json
+import logging
+import socket
 from concurrent.futures import ThreadPoolExecutor
+
 from utils.user import User
 
 
@@ -20,7 +21,9 @@ class Server:
                 port: int,
                 host: str = '127.0.0.1',
                 logger: logging.Logger = logging.getLogger(),
-                skt: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                skt: socket.socket = socket.socket(
+                        socket.AF_INET, socket.SOCK_STREAM
+                    )
                 ):
         """
         @param port: int
@@ -67,9 +70,15 @@ class Server:
         """
         return True
 
-    def connect_client(self, data: dict, conn: socket.socket, addr: str) -> User:
+    def connect_client(
+                self,
+                data: dict,
+                conn: socket.socket,
+                addr: str
+            ) -> User:
         """
-        Waits for clients to connect and avoids a users "connecting" twice or more
+        Waits for clients to connect and avoids a users "connecting" twice or
+        more
         ToDo:
             Validate authenticated users
         @param data: str
@@ -94,7 +103,9 @@ class Server:
         print("User has been created", user)
         # Adding user to list of connected users
         self.__usuarios[data["username"]] = user
-        print("User created and attached to list", self.__usuarios[data['username']])
+        print(
+                "User created and attached to list",
+                self.__usuarios[data['username']])
         response = {
                     'connected': 'ok',
                     # This token is provisional until auth
@@ -119,7 +130,12 @@ class Server:
             return {}
         return stream
 
-    def __user_command(self, data: dict, conn: socket.socket, username: str) -> str:
+    def __user_command(
+                self,
+                data: dict,
+                conn: socket.socket,
+                username: str
+            ) -> str:
         """
         Try to execute user command
         @param data: dict
@@ -127,7 +143,10 @@ class Server:
         """
         if data["command"] == "send":
             message = {"sender": username, "message": data["message"]}
-            self.send_to(message, self.__usuarios[data["recipient"]].get_conn())
+            self.send_to(
+                            message,
+                            self.__usuarios[data["recipient"]].get_conn()
+                        )
             return "done"
         if data["command"] == "stop":
             conn.close()
@@ -213,7 +232,8 @@ class Server:
             self.__skt.bind((self.__host, self.__port))
         except (OSError, PermissionError):
             message = """Port unavailable\n\t
-                         Either you don't have permission or port is already in use.\n
+                         Either you don't have permission or
+                         port is already in use.\n
                          Try a different port!"""
             self.__logger.debug("%s", message)
             return False
