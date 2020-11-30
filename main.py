@@ -35,8 +35,9 @@ class HandleSocket:
     """
         Esta clase solo es para manejar las clases start y conn
     """
-    __skt: object
+    __skt: Server
     __logger: logging.Logger
+    __client: Conn
 
     def __init__(self, _logger: logging.Logger = logging.getLogger()):
         """
@@ -81,8 +82,8 @@ class HandleSocket:
             self.__logger.debug('Invalid port')
             return False
         self.__logger.debug("Trying to connect")
-        self.__skt = Conn(host, int(port), user, password, self.__logger)
-        return self.__skt.connect()
+        self.__client = Conn(host, int(port), user, password, self.__logger)
+        return self.__client.connect()
 
     def send(self, _messages: list):
         """

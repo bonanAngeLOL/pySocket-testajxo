@@ -4,20 +4,17 @@
 import socket
 import logging
 import json
-import sys
-import os
 from concurrent.futures import ThreadPoolExecutor
-from os import path
-sys.path.append(os.getcwd())
 from utils.user import User
-from utils.auth import Auth
+
 
 class Server:
     """
     Clase para iniciar el socket
     """
     __status: bool = False
-    __usuarios:dict = {}
+    __usuarios: dict = {}
+
     def __init__(
                 self,
                 port: int,
@@ -44,22 +41,20 @@ class Server:
         """
         self.__skt.close()
 
-    def __get_all_users(self) -> str:
+    def __get_all_users(self) -> dict:
         """
         Lista de usuarios que han iniciado sesión
-        @return str
+        @return dict
         """
-        return json.dumps({'users':(list(self.__usuarios.keys()))})
+        return {'users': (list(self.__usuarios.keys()))}
 
-    def __broadcast(self, message: str):
+    def __broadcast(self, message: dict):
         """
         Envia un mensaje a todos los usuarios
-        @param message: str
+        @param message: dict
         """
-        message = (message+'\0').encode("utf8")
         for user in self.__usuarios:
-            print(self.__usuarios[user])
-            self.__usuarios[user].get_conn().send(message)
+            self.send_to(message, self.__usuarios[user].get_conn())
 
     def auth(self, username, password) -> str:
         """
@@ -82,48 +77,36 @@ class Server:
         @param addr: str
         @return User
         """
-        if data["username"] in self.__usuarios:
-            print("user already loged in?")
-            # Need to compare a token, disconect if user is not auth
-            if data['username'] in self.__usuarios.keys():
-                print("\tReturning to session")
-                return self.__usuarios[data["username"]]
-        else:
+        try:
             token = self.auth(data['username'], data['password'])
-            print("user ", data["username"], " token ", token)
-            if token:
-                try:
-                    print("Token True")
-                    print("trying to create user")
-                    user = ''
-                    user = User(
-                                data["username"],
-                                data["password"],
-                                token,
-                                addr,
-                                conn
-                                )
-                    print("User has been created", user)
-                    self.__usuarios[data["username"]] = user
-                    print("User created and attached to list", self.__usuarios[data['username']])
-                    try:
-                        response = {
-                                    'connected':'ok',
-                                    'token': ("True" if token else '')
-                                    }
-                        conn.send((json.dumps(response)+"|").encode("utf8"))
-                    except:
-                        e = sys.exc_info()
-                        print(e)
-                    print("Info sent")
-                    return self.__usuarios[data["username"]]
-                except TypeError:
-                    return None
-        conn.send("{'connected':'refused'}|".encode("utf8"))
-        return None
+        except KeyError:
+            return None
+        # Add control for failed token creation
+        print("user ", data["username"], " token ", token)
+        print("trying to create user")
+        user = User(
+                    data["username"],
+                    data["password"],
+                    token,
+                    addr,
+                    conn
+                )
+        print("User has been created", user)
+        # Adding user to list of connected users
+        self.__usuarios[data["username"]] = user
+        print("User created and attached to list", self.__usuarios[data['username']])
+        response = {
+                    'connected': 'ok',
+                    # This token is provisional until auth
+                    # module is finished
+                    'token': ("True" if token else '')
+                    }
+        self.send_to(response, conn)
+        print("Info sent")
+        return self.__usuarios[data["username"]]
 
     @classmethod
-    def __get_stream(cls, conn: object):
+    def __get_stream(cls, conn: object) -> dict:
         """
         Gets info from recv and decodes it as JSON
         @param conn : socket
@@ -143,24 +126,37 @@ class Server:
         @return str
         """
         if data["command"] == "send":
-            message = json.dumps({"sender":username, "message":data["message"]})+"|"
-            self.__usuarios[data["recipient"]].get_conn.send(message.encode("utf8"))
+            message = {"sender": username, "message": data["message"]}
+            self.send_to(message, self.__usuarios[data["recipient"]].get_conn())
             return "done"
         if data["command"] == "stop":
             conn.close()
             return "closed"
         return "invalid argument"
 
+    def send_to(self, info: dict, recipient: socket.socket) -> bool:
+        """
+        Send info formatted as JSON with separator to connection
+        @param info: dict
+        @param recipient: socket.socket
+        @return bool
+        """
+        try:
+            recipient.send((json.dumps(info)+'\0').encode("utf8"))
+            return True
+        except json.decoder.JSONDecodeError:
+            return False
+
     def __listen_client(self, user: User):
         """
         Thread para el usuario
         @param user: User
         """
+        user_conn = user.get_conn()
+        self.send_to({'connected': 'ok'}, user_conn)
         while True:
             print("listening user...")
-            user_conn = user.get_conn()
             print("sent keepalive")
-            user_conn.send(json.dumps({'connected':'ok'}).encode("utf8"))
             print("Waiting for response")
             message = user_conn.recv(2048).decode("utf8")
             print(message)
@@ -192,19 +188,16 @@ class Server:
                 continue
             print("New user ", data)
             # Auth user and return an User() object
-            try:
-                user = self.connect_client(data, conn, addr)
-            except KeyError:
-                conn.close()
-                print("Malformed request received")
-                continue
+            user = self.connect_client(data, conn, addr)
             # Is user authenticated
             if user is None:
                 # They wasn't
+                self.send_to({'connected': 'refused'}, conn)
                 conn.close()
+                print("Malformed request received")
                 continue
             # Send a list of connected users to all connected users
-            self.__broadcast((self.__get_all_users()+"|").encode("utf8"))
+            self.__broadcast(self.__get_all_users())
             # Listen to the client using user object to do so!
             executor.submit(self.__listen_client, user)
 

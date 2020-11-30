@@ -61,7 +61,7 @@ class Conn:
         @return dict
         """
         stream = {}
-        received = (conn.recv(1024).decode("utf8")).split("|")
+        received = (conn.recv(1024).decode("utf8")).split("\0")
         print("Received string", received)
         for message in received:
             if len(message) < 0 :

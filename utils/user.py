@@ -3,6 +3,8 @@ Esta clase es usada para encapsular la información de los usuarios
 incluyendo la sesión para usarlos desde la lista de usuarios de 
 
 """
+
+
 class User:
     """
     Clase usuario
