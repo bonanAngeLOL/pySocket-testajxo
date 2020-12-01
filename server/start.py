@@ -9,7 +9,6 @@ import os
 from concurrent.futures import ThreadPoolExecutor
 
 from utils.user import User
-from client.conn import Conn
 
 
 class Server:
@@ -97,6 +96,7 @@ class Server:
             return False
         except ValueError:
             return False
+        from client.conn import Conn
         self.__client = Conn(addr[0], cport, "A", self.__logger)
         return self.__client.connect()
         """

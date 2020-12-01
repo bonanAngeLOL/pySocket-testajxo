@@ -95,13 +95,9 @@ class Conn:
         return False
 
     def __commander(self, command):
-        if command == 'send':
-            recipient = input("Recipient: ")
-            message = input("Message :\n")
+        if command != '':
             emmit = {
-                    'command': 'send',
-                    'recipient': recipient,
-                    'message': message
+                    'message': command
             }
             print("Sending")
             self.__skt.send(json.dumps(emmit).encode("utf8"))
@@ -114,7 +110,6 @@ class Conn:
         while True:
             from_server = self.__get_stream(self.__skt)
             print(f"received from server: \n_______\n{from_server}\n_______\n")
-            # Implement actions when something is received
 
     def __command_cycle(self):
         print("Write a command")
@@ -133,16 +128,11 @@ class Conn:
         try:
             print("Waiting for response")
             self.__skt.connect((self.host, self.port))
-            if not self.__auth_step():
-                print("Auth failed")
-                return False
-            self.__status = True
             self.__logger.debug("connected")
         except OSError:
             self.__status = False
             return False
         with ThreadPoolExecutor(max_workers=2) as executor:
-            executor.submit(self.__waiting_response)
             executor.submit(self.__command_cycle)
         return self.__status
 
