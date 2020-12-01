@@ -98,13 +98,13 @@ class Server:
         except ValueError:
             return False
         self.__client = Conn(addr[0], cport, "A", self.__logger)
+        return self.__client.connect()
         """
         try:
             token = self.auth(data['username'], data['password'])
         except KeyError:
             return None
         # Add control for failed token creation
-        
         print("user ", data["username"], " token ", token)
         print("trying to create user")
         user = User(
