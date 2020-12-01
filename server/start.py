@@ -9,6 +9,7 @@ import os
 from concurrent.futures import ThreadPoolExecutor
 
 from utils.user import User
+from client.conn import Conn
 
 
 class Server:
@@ -38,6 +39,7 @@ class Server:
         self.__logger = logger
         self.__skt = skt
         self.__direccion: tuple
+        self.__client: object
 
     def __del__(self):
         """
@@ -75,9 +77,8 @@ class Server:
     def connect_client(
                 self,
                 data: dict,
-                conn: socket.socket,
-                addr: str
-            ) -> User:
+                addr: tuple
+            ) -> bool:
         """
         Waits for clients to connect and avoids a users "connecting" twice or
         more
@@ -89,10 +90,21 @@ class Server:
         @return User
         """
         try:
+            cport = int(data['cport'])
+            # gettin key
+            # p_k = data['p_k']
+        except KeyError:
+            return False
+        except ValueError:
+            return False
+        self.__client = Conn(addr[0], cport, "A", self.__logger)
+        """
+        try:
             token = self.auth(data['username'], data['password'])
         except KeyError:
             return None
         # Add control for failed token creation
+        
         print("user ", data["username"], " token ", token)
         print("trying to create user")
         user = User(
@@ -117,6 +129,7 @@ class Server:
         self.send_to(response, conn)
         print("Info sent")
         return self.__usuarios[data["username"]]
+        """
 
     @classmethod
     def __get_stream(cls, conn: object) -> dict:
@@ -136,7 +149,6 @@ class Server:
                 self,
                 data: dict,
                 conn: socket.socket,
-                username: str
             ) -> str:
         """
         Try to execute user command
@@ -148,7 +160,7 @@ class Server:
             print("casting command")
             if data["command"] == "send":
                 print("sending")
-                message = {"sender": username, "message": data["message"]}
+                message = {"message": data["message"]}
                 print("message formed")
                 self.send_to(
                                 message,
@@ -178,24 +190,19 @@ class Server:
         except json.decoder.JSONDecodeError:
             return False
 
-    def __listen_client(self, user: User):
+    def __listen_client(self, user_conn: object):
         """
         Thread para el usuario
         @param user: User
         """
-        user_conn = user.get_conn()
-        self.send_to({'connected': 'ok'}, user_conn)
         while True:
-            print("listening user...")
-            print("sent keepalive")
-            print("Waiting for response")
             message = user_conn.recv(2048).decode("utf8")
             print("Received from client", message)
             try:
                 print("Trying to access to commander")
                 data = json.loads(message)
                 print("json loaded from message", data)
-                self.__user_command(data, user_conn, user.get_username())
+                self.__user_command(data, user_conn)
             except:
                 print("Error !!!! : ", sys.exc_info()[0])
                 continue
@@ -221,18 +228,10 @@ class Server:
                 continue
             print("New user ", data)
             # Auth user and return an User() object
-            user = self.connect_client(data, conn, addr)
             # Is user authenticated
-            if user is None:
-                # They wasn't
-                self.send_to({'connected': 'refused'}, conn)
-                conn.close()
-                print("Malformed request received")
-                continue
-            # Send a list of connected users to all connected users
-            self.__broadcast(self.__get_all_users())
             # Listen to the client using user object to do so!
-            executor.submit(self.__listen_client, user)
+            executor.submit(self.__listen_client, conn)
+            executor.submit(self.connect_client, data, addr)
 
     def start(self) -> bool:
         """
@@ -251,7 +250,7 @@ class Server:
                          Try a different port!"""
             self.__logger.debug("%s", message)
             return False
-        self.__skt.listen(10)
+        self.__skt.listen(1)
         with ThreadPoolExecutor(max_workers=10) as executor:
             self.__listening(executor)
         return True

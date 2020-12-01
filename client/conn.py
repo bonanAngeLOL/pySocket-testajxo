@@ -16,7 +16,6 @@ class Conn:
             host: str,
             port: int,
             username: str,
-            password: str,
             logger: logging.Logger = logging.getLogger(),
             skt: socket.socket = socket.socket(
                         socket.AF_INET,
@@ -27,7 +26,6 @@ class Conn:
         @param host: str
         @param port: int
         @param username: str
-        @param password: str
         @param logger: logging.Logger
         @param skt: socket.socket
         """
@@ -36,7 +34,6 @@ class Conn:
         self.__skt = skt
         self.__logger = logger
         self.__username = username
-        self.__password = password
         self.__token = ''
 
     def __del__(self):
@@ -86,7 +83,6 @@ class Conn:
     def __auth_step(self) -> bool:
         user = {
                 "username": self.__username,
-                "password": self.__password,
                 "command": "connect"
                }
         self.__skt.send(json.dumps(user).encode("utf8"))
