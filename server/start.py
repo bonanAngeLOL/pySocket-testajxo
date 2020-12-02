@@ -21,11 +21,9 @@ class Server:
     def __init__(
                 self,
                 port: int,
-                host: str = '127.0.0.1',
+                host: str,
+                username: str,
                 logger: logging.Logger = logging.getLogger(),
-                skt: socket.socket = socket.socket(
-                        socket.AF_INET, socket.SOCK_STREAM
-                    )
                 ):
         """
         @param port: int
@@ -36,9 +34,11 @@ class Server:
         self.__port = port
         self.__host = host
         self.__logger = logger
-        self.__skt = skt
         self.__direccion: tuple
         self.__client: object
+        self.__skt = socket.socket = socket.socket(
+                        socket.AF_INET, socket.SOCK_STREAM
+                    )
 
     def __del__(self):
         """
@@ -46,21 +46,6 @@ class Server:
         @return:
         """
         self.__skt.close()
-
-    def __get_all_users(self) -> dict:
-        """
-        Lista de usuarios que han iniciado sesión
-        @return dict
-        """
-        return {'users': (list(self.__usuarios.keys()))}
-
-    def __broadcast(self, message: dict):
-        """
-        Envia un mensaje a todos los usuarios
-        @param message: dict
-        """
-        for user in self.__usuarios:
-            self.send_to(message, self.__usuarios[user].get_conn())
 
     def auth(self, username, password) -> str:
         """
@@ -206,6 +191,15 @@ class Server:
             except:
                 print("Error !!!! : ", sys.exc_info()[0])
                 continue
+    
+    def add_user(self, ip, port, username):
+        """
+        Set user
+        """
+        self.__usuarios[username] = (ip, port)
+
+    def start_listening(username):
+        # agregar opciones de usuario
 
     def __listening(self, executor: object):
         """
@@ -233,7 +227,7 @@ class Server:
             executor.submit(self.__listen_client, conn)
             executor.submit(self.connect_client, data, addr)
 
-    def start(self) -> bool:
+    def start(self, wait: bool = False) -> bool:
         """
         Inicia el socket (bind), se agrego la opcion SO_REUSEADDR para
         evitar que el puerto se quete en TIME_WAIT y se pueda repetir el
@@ -250,7 +244,7 @@ class Server:
                          Try a different port!"""
             self.__logger.debug("%s", message)
             return False
-        self.__skt.listen(1)
+        self.__skt.listen(10)
         with ThreadPoolExecutor(max_workers=10) as executor:
             self.__listening(executor)
         return True

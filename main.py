@@ -60,17 +60,8 @@ class HandleSocket:
             return False
         self.__logger.debug("Trying to connect")
         self.__client = Conn(host, int(port), user, self.__logger)
-        return self.__client.connect()
 
-    def send(self, _messages: list):
-        """
-        Esta funcion envia un mensaje cuando self.skt es
-        una instancia de conn
-        @param _messages: list
-        """
-        if isinstance(self.__skt, Conn):
-            # self.__skt.send(_messages)
-            pass
+        return self.__client.connect(True)
 
 
 if __name__ == "__main__":

@@ -119,7 +119,7 @@ class Conn:
                 break
             self.__commander(command)
 
-    def connect(self) -> bool:
+    def connect(self, negotiate: bool = False) -> bool:
         """
         Intenta conectarse al socket por host y puerto
         Si la conexion fue exitosa, retorna True
@@ -134,6 +134,10 @@ class Conn:
             return False
         with ThreadPoolExecutor(max_workers=2) as executor:
             executor.submit(self.__command_cycle)
+            if negotiate:
+                from server.start import Server
+                server = Server(int(port), host, self.__logger)
+                executor.submit()
         return self.__status
 
     def send(self, messages: list):
