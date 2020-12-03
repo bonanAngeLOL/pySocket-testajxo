@@ -9,8 +9,8 @@ import os.path
 import readline
 import threading
 
-from client.conn3 import Conn
-from server.start3 import Server
+from client.conn import Conn
+from server.start import Server
 
 
 class Init(cmd.Cmd):
