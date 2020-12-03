@@ -18,7 +18,7 @@ class Init(cmd.Cmd):
     Init class
     """
     __logger: logging.Logger
-    __ConnectedTo: {}
+    intro = "Type acommand to start"
 
     def __init__(
                 self,
@@ -91,11 +91,6 @@ class Init(cmd.Cmd):
             raise TypeError
         self.init(*param)
 
-    def listen_client(self, conn):
-        while True:
-            from_server = conn.recv(1024).decode("utf8")
-            print(from_server)
-
     def conn(self, host: str, port: int, user: str):
         """
         Conectarse a un socket
@@ -110,7 +105,10 @@ class Init(cmd.Cmd):
         self.__logger.debug("Trying to connect")
         client = Conn(host, int(port), self.__logger)
         print(client)
-        thread = threading.Thread(target=client.connect, daemon=True)
+        thread = threading.Thread(
+            target=client.connect,
+            daemon=True
+        )
         thread.start()
 
     def do_conn(self, args):
@@ -122,13 +120,13 @@ class Init(cmd.Cmd):
     def console(self):
         self.cmdloop()
 
-    # def onecmd(self, line):
-    #    try:
-    #        return super().onecmd(line)
-    #    except TypeError as err:
-    #        self.__logger.debug("%s", "Invalid arguments")
-    #        self.__logger.debug("%s", err)
-    #        return False
+    def onecmd(self, line):
+        try:
+            return super().onecmd(line)
+        except TypeError as err:
+            self.__logger.debug("%s", "Invalid arguments")
+            self.__logger.debug("%s", err)
+            return False
 
     def emptyline(self):
         pass
@@ -141,6 +139,12 @@ class Init(cmd.Cmd):
         if readline:
             readline.set_history_length(self.__histfile_size)
             readline.write_history_file(self.__histfile)
+
+    def do_EOF(self, line):
+        return True
+
+    def do_exit(self, line):
+        return self.do_EOF(line)
 
 
 if __name__ == "__main__":
