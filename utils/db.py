@@ -37,7 +37,7 @@ class SqliteConn:
         'user': """SELECT * FROM user
                     where id_u = ?""",
         'queue': """SELECT * FROM queue
-                    where id_q"""
+                    where id_q = ?"""
     }
 
     def __init__(self, database: str):
@@ -90,7 +90,22 @@ class SqliteConn:
         return self.__run_query("SELECT * FROM users")
 
     def get_user_by_name(self, name: str):
-        return self.__run_query("SELECT * FROM user WHERE")
+        result = self.__run_query(
+            "SELECT * FROM user WHERE username = ?",
+            (name, )
+        )
+        if len(result) > 0:
+            return result[0]
+        return None
+
+    def connected_user(self, name: str, addr: str):
+        result = self.__run_query(
+            "SELECT * FROM user WHERE username = ? and addr = ?",
+            (name, addr)
+        )
+        if len(result) > 0:
+            return result[0]
+        return None
 
     def __run_query(self, query: str, parameters=()) -> list:
         """
