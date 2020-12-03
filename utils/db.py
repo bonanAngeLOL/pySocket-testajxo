@@ -25,7 +25,7 @@ class SqliteConn:
         'user': """INSERT INTO user
                     (username, addr, public_k)
                     values
-                    (?, ?, ?, ?)""",
+                    (?, ?, ?)""",
         'queue': """INSERT INTO queue
                     (sender, recipient, message)
                     values
@@ -87,7 +87,10 @@ class SqliteConn:
 
         @return list
         """
-        return self.__run_query("SELECT * FROM users_test")
+        return self.__run_query("SELECT * FROM users")
+
+    def get_user_by_name(self, name: str):
+        return self.__run_query("SELECT * FROM user WHERE")
 
     def __run_query(self, query: str, parameters=()) -> list:
         """
