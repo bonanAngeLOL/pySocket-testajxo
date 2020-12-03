@@ -22,7 +22,7 @@ class Server:
         self.__port = port
         self.__user = user
         self.__logger = logger
-        self.__skt = socket.socket = socket.socket(
+        self.__skt = socket.socket(
                         socket.AF_INET, socket.SOCK_STREAM
                      )
 

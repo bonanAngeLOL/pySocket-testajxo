@@ -2,9 +2,11 @@
 socket
 """
 import cmd
-import multiprocessing
+from multiprocessing import Process
 import logging
 import sys
+import os.path
+import readline
 import threading
 
 from client.conn3 import Conn
@@ -25,6 +27,9 @@ class Init(cmd.Cmd):
         super().__init__()
         self.__logger = logger
         self.prompt = " ~> "
+        self.__histfile = os.path.expanduser('~/.babilu_history')
+        self.__histfile_size = 1000
+
 
     def __del__(self):
         pass
@@ -42,6 +47,8 @@ class Init(cmd.Cmd):
         @type port: str
         @return: bool
         """
+        if isinstance(port, int):
+            return True
         return port.isdigit()
 
     def get_params(self, line):
@@ -59,8 +66,13 @@ class Init(cmd.Cmd):
             return False
         # -- Start server: IP PORT USER LOGGER
         server = Server(host, int(port), user, self.__logger)
-        # binding ok ?
-        server.start()
+        print("server inst")
+        proc = Process(
+            target=server.start,
+            args=(),
+            daemon=True
+        )
+        proc.start()
         self.__logger.debug(
                     "Listening now on: \n\t\t %s:%s",
                     host,
@@ -84,19 +96,22 @@ class Init(cmd.Cmd):
             from_server = conn.recv(1024).decode("utf8")
             print(from_server)
 
-    def conn(self, host, port, user) -> bool:
+    def conn(self, host: str, port: int, user: str):
         """
-        Connect to server
+        Conectarse a un socket
+        @param host: str
+        @param port: str
+        @param user: str
+        @return:
         """
-        # start with process pool
-        conn = Conn(host, port, self.__logger)
-        if not conn.connect():
-            raise TypeError
-        multiprocessing.Process(
-                    target=self.listen_client,
-                    args=(conn,)
-                ).start()
-        return True
+        if not self._check_port(port):
+            self.__logger.debug('Invalid port')
+            return False
+        self.__logger.debug("Trying to connect")
+        client = Conn(host, int(port), self.__logger)
+        print(client)
+        thread = threading.Thread(target=client.connect, daemon=True)
+        thread.start()
 
     def do_conn(self, args):
         param = self.get_params(args)
@@ -117,6 +132,15 @@ class Init(cmd.Cmd):
 
     def emptyline(self):
         pass
+
+    def preloop(self):
+        if readline and os.path.exists(self.__histfile):
+            readline.read_history_file(self.__histfile)
+
+    def postloop(self):
+        if readline:
+            readline.set_history_length(self.__histfile_size)
+            readline.write_history_file(self.__histfile)
 
 
 if __name__ == "__main__":
