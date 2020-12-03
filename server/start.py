@@ -74,20 +74,44 @@ class Server:
     def action(self, data, conn, addr) -> bool:
         try:
             if data['command'] == 'connect':
-                user = self.__dbconn.get_user_by_name(data['name'])
+                user = self.__dbconn.get_user_by_name(data['user'])
                 if user is not None:
                     nmessage = {
                         'command': 'nmessage',
-                        'message': 'user already connected with the same name',
+                        'message': 'user already connected',
                         'code': 0
                     }
+                    self.__logger.debug("User %s was already connected", data['user'])
                     self.send_to(nmessage, conn)
                     return False
                 else:
-                    nuser = (data["username"], addr[0]+self.__port, data['pk'])
-                    self.__dbconn.insert
+                    nuser = (data["user"], addr[0]+self.__port, data['pk'])
+                    self.__dbconn.insert(nuser, 'user')
+                    nmessage = {
+                        'command': 'nmessage',
+                        'message': 'Welcome',
+                        'code': 1
+                    }
+                    self.__logger.debug("User %s is now connected", data['user'])
+                    self.send_to(nmessage, conn)
+                    return True
+            if data['command'] == 'send':
+                user = self.__dbconn.connected_user()
+                if data["message"] == '':
+                    self.__logger.debug("No message found!")
+                    return False
+                if user is None:
+                    self.__logger.debug(
+                        """%s tried to send a message, but they are not connected""",
+                        data['user']
+                    )
+                    return False
+                self.__dbconn.insert((user[0], '', data['message']), 'queue')
+                self.__logger.debug("Received message from %", user[1])
+                return True
         except KeyError:
             return False
+        return False
 
     def __listening(self, executor: object):
         print("listening...")
@@ -97,6 +121,9 @@ class Server:
             # Get messages
             self.__logger.debug("%s", "Request received")
             data = self.__get_stream(conn)
+            # !!!! REORDER this,
+            #       FIRST accepting connection and
+            #       assign a thread to it
             # If no message found close the connection
             if data is None or data == '':
                 conn.close()
