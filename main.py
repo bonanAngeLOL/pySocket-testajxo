@@ -1,28 +1,44 @@
 """
-Socket
-
+socket
 """
+import cmd
+from multiprocessing import Process
 import logging
 import sys
+import os.path
+import readline
+import threading
 
-from client.conn import Conn
-from server.start import Server
+from client.conn3 import Conn
+from server.start3 import Server
 
 
-class HandleSocket:
+class Init(cmd.Cmd):
     """
-        Esta clase solo es para manejar las clases start y conn
+    Init class
     """
-    __skt: Server
     __logger: logging.Logger
-    __client: Conn
+    __ConnectedTo: {}
 
-    def __init__(self, _logger: logging.Logger = logging.getLogger()):
+    def __init__(
+                self,
+                logger
+            ):
+        super().__init__()
+        self.__logger = logger
+        self.prompt = " ~> "
+        self.__histfile = os.path.expanduser('~/.babilu_history')
+        self.__histfile_size = 1000
+
+
+    def __del__(self):
+        pass
+
+    def set_logger(self, logger):
         """
-        Se inyecta la instancia del logging.Logger
-        @param _logger: logging.Logger
+        Logger setter
         """
-        self.__logger = _logger
+        self.__logger = logger
 
     @staticmethod
     def _check_port(port: str) -> bool:
@@ -31,23 +47,56 @@ class HandleSocket:
         @type port: str
         @return: bool
         """
+        if isinstance(port, int):
+            return True
         return port.isdigit()
 
-    def start(self, host: str, port: int):
+    def get_params(self, line):
         """
-        Iniciar el socket
-        @param host: str
-        @param port: int
+        Getting list from string
+        """
+        return line.split(" ")
+
+    def init(self, host, port, user):
+        """
+        Init as server
         """
         if not self._check_port(port):
             self.__logger.debug('Invalid port')
             return False
-        self.__logger.debug("Starting socket")
-        self.__skt = Server(int(port), host, self.__logger)
-        self.__skt.start()
+        # -- Start server: IP PORT USER LOGGER
+        server = Server(host, int(port), user, self.__logger)
+        print("server inst")
+        proc = Process(
+            target=server.start,
+            args=(),
+            daemon=True
+        )
+        proc.start()
+        self.__logger.debug(
+                    "Listening now on: \n\t\t %s:%s",
+                    host,
+                    port
+                )
         return True
+        # starting server and wait for users
 
-    def connect(self, host: str, port: int, user: str):
+    def do_init(self, line):
+        """
+        Call to init() from python cmd
+        """
+        # Start server
+        param = self.get_params(line)
+        if len(param) != 3:
+            raise TypeError
+        self.init(*param)
+
+    def listen_client(self, conn):
+        while True:
+            from_server = conn.recv(1024).decode("utf8")
+            print(from_server)
+
+    def conn(self, host: str, port: int, user: str):
         """
         Conectarse a un socket
         @param host: str
@@ -59,35 +108,54 @@ class HandleSocket:
             self.__logger.debug('Invalid port')
             return False
         self.__logger.debug("Trying to connect")
-        self.__client = Conn(host, int(port), user, self.__logger)
+        client = Conn(host, int(port), self.__logger)
+        print(client)
+        thread = threading.Thread(target=client.connect, daemon=True)
+        thread.start()
 
-        return self.__client.connect(True)
+    def do_conn(self, args):
+        param = self.get_params(args)
+        if len(param) < 3:
+            raise TypeError
+        self.conn(param[0], int(param[1]), param[2])
+
+    def console(self):
+        self.cmdloop()
+
+    # def onecmd(self, line):
+    #    try:
+    #        return super().onecmd(line)
+    #    except TypeError as err:
+    #        self.__logger.debug("%s", "Invalid arguments")
+    #        self.__logger.debug("%s", err)
+    #        return False
+
+    def emptyline(self):
+        pass
+
+    def preloop(self):
+        if readline and os.path.exists(self.__histfile):
+            readline.read_history_file(self.__histfile)
+
+    def postloop(self):
+        if readline:
+            readline.set_history_length(self.__histfile_size)
+            readline.write_history_file(self.__histfile)
 
 
 if __name__ == "__main__":
 
     logging.basicConfig(level=logging.DEBUG, format="\t%(message)s")
-    logger = logging.getLogger('socket')
+    # init.set_logger(logging.getLogger('socket')) NOT REQUIRED YET
+
+    init = Init(logging.getLogger('socket'))
 
     NARGS = len(sys.argv)
 
-    hskt = HandleSocket(logger)
-
-    if sys.argv[1] == 'help':
-        logger.debug("Use:socket.py Action Host SPort Cport...")
-        logger.debug("\tAction\tAction of socket: start | connect ")
-        logger.debug("\tHost\tHostname or IP")
-        logger.debug("\tPort\tServer port number")
-        logger.debug("""Connect to port:\n\t
-                        socket.py connect Host Port""")
-        logger.debug("Start a server:\n\tsocket.py start Host Port CSport")
-    elif sys.argv[1] == 'start' and NARGS == 4:
-        hskt.start(sys.argv[2], sys.argv[3])
-    elif sys.argv[1] == 'connect' and NARGS == 4:
-        if hskt.connect(sys.argv[2], sys.argv[3], sys.argv[4]):
-            pass
-        else:
-            logger.debug("Unable to Connect\n\tTry another port or address")
-    else:
-        logger.debug("Invalid action \n required: [start | connect] ")
-
+    if NARGS == 3:
+        if sys.argv[1] == "start":
+            # IP PORT USER LOGGER
+            init.init(sys.argv[2], sys.argv[3], sys.argv[4])
+    elif NARGS == 1:
+        print("Write a command")
+        init.cmdloop()

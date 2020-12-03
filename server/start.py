@@ -1,120 +1,47 @@
 """
-    Este archivo contiene la clase que manejara los sockets
+Socket servidor
 """
-import json
-import logging
+
 import socket
 import sys
-import os
+
 from concurrent.futures import ThreadPoolExecutor
 
-from utils.user import User
-
-
 class Server:
-    """
-    Clase para iniciar el socket
-    """
-    __status: bool = False
+
     __usuarios: dict = {}
 
     def __init__(
-                self,
-                port: int,
-                host: str,
-                username: str,
-                logger: logging.Logger = logging.getLogger(),
-                ):
-        """
-        @param port: int
-        @param host: str
-        @param logger: logging.Logger
-        @param skt: socket.socket
-        """
-        self.__port = port
+        self,
+        host,
+        port,
+        user,
+        logger
+    ):
         self.__host = host
+        self.__port = port
+        self.__user = user
         self.__logger = logger
-        self.__direccion: tuple
-        self.__client: object
-        self.__skt = socket.socket = socket.socket(
+        self.__skt = socket.socket(
                         socket.AF_INET, socket.SOCK_STREAM
-                    )
+                     )
 
-    def __del__(self):
-        """
-        Cierra el socket si sigue activo
-        @return:
-        """
+    def __def__(self):
         self.__skt.close()
 
-    def auth(self, username, password) -> str:
+    def listen_client(self, conn, addr):
         """
-        TODO:
-            - Autenticar a un usuario
-            - Generar un token
-        @param: username: string
-        @param: password: string
-        @return str
+        Listening to client
         """
-        return True
+        while True:
+            message = self.__get_stream(conn)
+            print("From:\t", addr, f"\nmessage: \n{message}")
 
-    def connect_client(
-                self,
-                data: dict,
-                addr: tuple
-            ) -> bool:
+    def add_user(self, ip, port, username):
         """
-        Waits for clients to connect and avoids a users "connecting" twice or
-        more
-        ToDo:
-            Validate authenticated users
-        @param data: str
-        @param conn: socket.socket
-        @param addr: str
-        @return User
+        Set user
         """
-        try:
-            cport = int(data['cport'])
-            # gettin key
-            # p_k = data['p_k']
-        except KeyError:
-            return False
-        except ValueError:
-            return False
-        from client.conn import Conn
-        self.__client = Conn(addr[0], cport, "A", self.__logger)
-        return self.__client.connect()
-        """
-        try:
-            token = self.auth(data['username'], data['password'])
-        except KeyError:
-            return None
-        # Add control for failed token creation
-        print("user ", data["username"], " token ", token)
-        print("trying to create user")
-        user = User(
-                    data["username"],
-                    data["password"],
-                    token,
-                    addr,
-                    conn
-                )
-        print("User has been created", user)
-        # Adding user to list of connected users
-        self.__usuarios[data["username"]] = user
-        print(
-                "User created and attached to list",
-                self.__usuarios[data['username']])
-        response = {
-                    'connected': 'ok',
-                    # This token is provisional until auth
-                    # module is finished
-                    'token': ("True" if token else '')
-                    }
-        self.send_to(response, conn)
-        print("Info sent")
-        return self.__usuarios[data["username"]]
-        """
+        self.__usuarios[username] = (ip, port)
 
     @classmethod
     def __get_stream(cls, conn: object) -> dict:
@@ -123,92 +50,10 @@ class Server:
         @param conn : socket
         @return dict
         """
-        stream = {}
-        try:
-            stream = json.loads(conn.recv(1024).decode("utf8"))
-        except json.decoder.JSONDecodeError:
-            return {}
+        stream = conn.recv(1024).decode("utf8")
         return stream
 
-    def __user_command(
-                self,
-                data: dict,
-                conn: socket.socket,
-            ) -> str:
-        """
-        Try to execute user command
-        @param data: dict
-        @return str
-        """
-        print("command received")
-        try:
-            print("casting command")
-            if data["command"] == "send":
-                print("sending")
-                message = {"message": data["message"]}
-                print("message formed")
-                self.send_to(
-                                message,
-                                self.__usuarios[data["recipient"]].get_conn()
-                            )
-                print("message sent")
-                return "done"
-            if data["command"] == "stop":
-                print("closing")
-                conn.close()
-                return "closed"
-        except:
-            print("Error !!!! : ", sys.exc_info()[0])
-        print("getting out from commander")
-        return "invalid argument"
-
-    def send_to(self, info: dict, recipient: socket.socket) -> bool:
-        """
-        Send info formatted as JSON with separator to connection
-        @param info: dict
-        @param recipient: socket.socket
-        @return bool
-        """
-        try:
-            recipient.send((json.dumps(info)+'\0').encode("utf8"))
-            return True
-        except json.decoder.JSONDecodeError:
-            return False
-
-    def __listen_client(self, user_conn: object):
-        """
-        Thread para el usuario
-        @param user: User
-        """
-        while True:
-            message = user_conn.recv(2048).decode("utf8")
-            print("Received from client", message)
-            try:
-                print("Trying to access to commander")
-                data = json.loads(message)
-                print("json loaded from message", data)
-                self.__user_command(data, user_conn)
-            except:
-                print("Error !!!! : ", sys.exc_info()[0])
-                continue
-    
-    def add_user(self, ip, port, username):
-        """
-        Set user
-        """
-        self.__usuarios[username] = (ip, port)
-
-    def start_listening(username):
-        # agregar opciones de usuario
-
     def __listening(self, executor: object):
-        """
-        Ciclo para escuchar y reponder a los mensajes
-        De acuerdo con la tarea, regresara el numero recibido mas 15
-        el ciclo termina al recibir la cadena "stop"
-        @param executor : concurrent.futures.thread.ThreadPoolExecutor
-        @void
-        """
         while True:
             print("listening...")
             # Get connection
@@ -220,20 +65,11 @@ class Server:
             if data is None or data == '':
                 conn.close()
                 continue
-            print("New user ", data)
-            # Auth user and return an User() object
-            # Is user authenticated
+            print("data ", data)
             # Listen to the client using user object to do so!
-            executor.submit(self.__listen_client, conn)
-            executor.submit(self.connect_client, data, addr)
+            executor.submit(self.listen_client, conn, addr)
 
-    def start(self, wait: bool = False) -> bool:
-        """
-        Inicia el socket (bind), se agrego la opcion SO_REUSEADDR para
-        evitar que el puerto se quete en TIME_WAIT y se pueda repetir el
-        ejercicio inmediatamente despues de terminar
-        @return: bool
-        """
+    def start(self) -> bool:
         self.__skt.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
             self.__skt.bind((self.__host, self.__port))
@@ -248,3 +84,4 @@ class Server:
         with ThreadPoolExecutor(max_workers=10) as executor:
             self.__listening(executor)
         return True
+
