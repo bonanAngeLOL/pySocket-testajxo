@@ -1,24 +1,44 @@
 import sqlite3
 
 
-class SqliteHandler:
+class SqliteConn:
     """
     Clase para manejar los registros con SQLite
     """
-    __users: str = """CREATE TABLE IF NOT EXISTS users_test (
+
+    __user: str = """CREATE TABLE IF NOT EXISTS user (
                         id_u INTEGER PRIMARY KEY,
                         username TEXT,
                         addr TEXT NOT NULL,
                         public_k TEXT NOT NULL
                     );"""
 
-    __messages: str = """CREATE TABLE IF NOT EXISTS queue
+    __queue: str = """CREATE TABLE IF NOT EXISTS queue
                          id_q INTEGER PRIMARY KEY,
-                         sender TEXT,
-                         recipient TEXT NOT NULL,
+                         sender INTEGER,
+                         recipient INTEGER,
                          message TEXT NOT NULL,
                          timest DEFAULT CURRENT_TIMESTAMP
                         );"""
+
+    __inserting: dict = {
+        'user': """INSERT INTO user
+                    (username, addr, public_k)
+                    values
+                    (?, ?, ?, ?)""",
+        'queue': """INSERT INTO queue
+                    (sender, recipient, message)
+                    values
+                    (?, ?, ?)
+                    """
+    }
+
+    __selecting_id: dict = {
+        'user': """SELECT * FROM user
+                    where id_u = ?""",
+        'queue': """SELECT * FROM queue
+                    where id_q"""
+    }
 
     def __init__(self, database: str):
         self.__conn = sqlite3.connect(database)
@@ -33,27 +53,30 @@ class SqliteHandler:
         self.__cursor.close()
         self.__conn.close()
 
-    def insert(self, params: tuple) -> int:
+    def insert(self, params: tuple, table: str) -> int:
         """
         Insertar un registro en la base de datos, regresa el Id de registro
 
         @param params : tuple
+        @param table: str
         @return: int
         """
-        self.__run_query("""INSERT INTO users_test
-                        (nombre, apellidos, contrasena, email) values
-                        (?, ?, ?, ?)""", params)
+        if table not in self.__inserting.keys():
+            return 0
+        self.__run_query(self.__inserting[table], params)
         return self.__cursor.lastrowid
 
-    def get_by_id(self, id: int) -> tuple:
+    def get_by_id(self, idn: int, table: str) -> tuple:
         """
         Obtener un registro mediante en ID
 
-        @param id: int
+        @param idn: int
+        @param table: str
         @return tuple
         """
-        result = self.__run_query("""SELECT * FROM
-                 users_test where id = ?""", (id, ))
+        if table not in self.__selecting_id():
+            return ()
+        result = self.__run_query(self.__selecting_id[table], (idn, ))
         if len(result) > 0:
             return result[0]
         return None
@@ -80,30 +103,3 @@ class SqliteHandler:
         except Exception:
             return None
         return self.__cursor.fetchall()
-
-
-if __name__ == '__main__':
-    print("Tarea Base de datos")
-    # Sqlite class
-    db = SqliteHandler("test")
-
-    # Usuarios
-    user1 = ("Juan", "Perez", "password1", "juan@perez.com",)
-    user2 = ("Pedro", "C.", "contraseña", "pedro@c.com",)
-
-    # Insertar usuarios
-    db.insert(user1)
-    pedroId = db.insert(user2)
-
-    # Id de pedro
-    print("Id de pedro", pedroId)
-
-    # Consulta a pedro por su Id
-    pedro = db.get_by_id(pedroId)
-
-    # Información de pedro
-    print("pedro", pedro)
-
-    # Todos los usuarios registrados
-    users = db.get_all()
-    print("All ", users)

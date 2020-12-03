@@ -8,9 +8,11 @@ import sys
 import os.path
 import readline
 import threading
+import datetime
 
 from client.conn import Conn
 from server.start import Server
+from utils.db import SqliteConn
 
 
 class Init(cmd.Cmd):
@@ -22,13 +24,17 @@ class Init(cmd.Cmd):
 
     def __init__(
                 self,
-                logger
+                logger: logging.Logger = logging.getLogger(),
+                dbconn = SqliteConn(
+                    datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+                )
             ):
         super().__init__()
         self.__logger = logger
         self.prompt = " ~> "
         self.__histfile = os.path.expanduser('~/.babilu_history')
         self.__histfile_size = 1000
+        self.__dbconn = dbconn
 
     def __del__(self):
         pass
