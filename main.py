@@ -21,11 +21,12 @@ class Init(cmd.Cmd):
     """
     __logger: logging.Logger
     intro = "Type a command to start o connect to host"
+    __user = None
 
     def __init__(
                 self,
                 logger: logging.Logger = logging.getLogger(),
-                dbconn = SqliteConn(
+                dbconn=SqliteConn(
                     datetime.datetime.now().strftime('%Y%m%d%H%M%S')
                 )
             ):
@@ -62,15 +63,19 @@ class Init(cmd.Cmd):
         """
         return line.split(" ")
 
-    def init(self, host, port, user):
+    def init(self, host, port, user=__user):
         """
         Init as server
         """
         if not self._check_port(port):
             self.__logger.debug('Invalid port')
             return False
+        if user is None:
+            self.__logger.debug("Username required")
+            return False
+        self.__user = user
         # -- Start server: IP PORT USER LOGGER
-        server = Server(host, int(port), user, self.__logger)
+        server = Server(host, int(port), user, self.__dbconn, self.__logger)
         print("server inst")
         proc = Process(
             target=server.start,
