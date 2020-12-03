@@ -18,7 +18,7 @@ class Init(cmd.Cmd):
     Init class
     """
     __logger: logging.Logger
-    intro = "Type acommand to start"
+    intro = "Type a command to start o connect to host"
 
     def __init__(
                 self,
@@ -29,7 +29,6 @@ class Init(cmd.Cmd):
         self.prompt = " ~> "
         self.__histfile = os.path.expanduser('~/.babilu_history')
         self.__histfile_size = 1000
-
 
     def __del__(self):
         pass
@@ -117,6 +116,12 @@ class Init(cmd.Cmd):
             raise TypeError
         self.conn(param[0], int(param[1]), param[2])
 
+    def do_setuser(self, args):
+        param = self.get_params(args)
+        if len(param) != 1:
+            raise TypeError
+        self.__user = args[0]
+
     def console(self):
         self.cmdloop()
 
@@ -156,10 +161,8 @@ if __name__ == "__main__":
 
     NARGS = len(sys.argv)
 
-    if NARGS == 3:
-        if sys.argv[1] == "start":
-            # IP PORT USER LOGGER
-            init.init(sys.argv[2], sys.argv[3], sys.argv[4])
-    elif NARGS == 1:
-        print("Write a command")
+    if NARGS > 1:
+        init.onecmd(' '.join(sys.argv[1:]))
+        init.cmdloop()
+    else:
         init.cmdloop()
