@@ -1,14 +1,14 @@
-# pyBabilu
+# Python y Linux 1 -Proyecto 2 
 
 A Chat program using sockets and public key encryption for 
-message communication with Qt interfaces
+message communication.
 
 ### Install 
 
 Before installing create a new VENV to place the code within.
 
 ```bash
-mkdir -p babilu && cd "$_" && python3 -m venv venv
+mkdir -p proyecto && cd "$_" && python3 -m venv venv
 ```
 
 Current install options are only to clone project to local 
@@ -23,20 +23,19 @@ pip3 install -r requirements.txt
 First of all open a terminal, and source to venv from bash
 
 ```bash
-cd /path/to/babilu
-source venv/bin/activate
+cd /path/to/proyecto && source venv/bin/activate
 ```
 
 To run as server:
 
 ```bash
-python main.py start [ip] [port] [max_users]
+python main.py  init [ip] [port]
 ```
 
 To run as client:
 
 ```bash
-python main.py connect [server_ip] [port] [user] [password]
+python main.py conn [server_ip] [server_port]
 ```
 
 ### Requerimientos del proyecto
@@ -47,26 +46,3 @@ python main.py connect [server_ip] [port] [user] [password]
 - [x] Las direcciones y puertos del servidor de otros objetos son introducidos de manera manual.
 - [ ] Cuando  los  sockets  establecen  comunicación,  el  socketcliente  envíasu  nombre  y  llave públicaal socketservidor, este responde con su nombre yllave pública.
 - [ ] Cuando se ha llevado a cabo el intercambio de llaves públicas, se comienza la comunicación segura de acuerdo al diagrama de comunicación
-
-### To Do: 
-
-- [x] Create socket
-- [x] Establish connection user - server
-- [x] Runnable by console command
-- [x] Use bidirectional communication from client app
-- [ ] User to user communication
-- [ ] Set server timeout
-- [ ] Add public key encryption
-- [ ] Set user db 
-- [ ] Add auth 
-- [ ] Detect user disconnection
-- [ ] Change print to logger
-- [ ] Use SQlite on client
-- [ ] Add actions on received info from server (in client)
-- [ ] Qt Interfaces
-
-#### If it happens to have more time to work
-
-- [ ] Make code run as a Unix daemon
-- [ ] Achieve any async socket listening
-- [ ] Use security signal protocol 
