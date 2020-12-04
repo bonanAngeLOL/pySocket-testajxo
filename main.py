@@ -22,6 +22,8 @@ class Init(cmd.Cmd):
     __logger: logging.Logger
     intro = "Type a command to start o connect to host"
     __user = None
+    __pk = 1
+    __sport = None
 
     def __init__(
                 self,
@@ -73,6 +75,7 @@ class Init(cmd.Cmd):
         if user is None:
             self.__logger.debug("Username required")
             return False
+        self.__sport = port
         self.__user = user
         # -- Start server: IP PORT USER LOGGER
         server = Server(host, int(port), user, self.__dbconn, self.__logger)
@@ -101,6 +104,14 @@ class Init(cmd.Cmd):
             raise TypeError
         self.init(*param)
 
+    def do_send(self, recipient):
+        user = self.__dbconn.get_user_by_name(recipient)
+        if user is None:
+            self.__logger.debug("You're not connected to %s", user)
+            return False
+        client = Conn(user[2], user[4], self.__dbconn, self.__logger)
+        client.prepare_message(input("Write a message"), user[1], self.__user)
+
     def conn(self, host: str, port: int, user: str):
         """
         Conectarse a un socket
@@ -113,7 +124,8 @@ class Init(cmd.Cmd):
             self.__logger.debug('Invalid port')
             return False
         self.__logger.debug("Trying to connect")
-        client = Conn(host, int(port), self.__logger)
+        client = Conn(host, int(port), self.__dbconn, self.__logger)
+        client.prepare_identity(self.__user, self.__pk, self.__sport)
         print(client)
         thread = threading.Thread(
             target=client.connect,

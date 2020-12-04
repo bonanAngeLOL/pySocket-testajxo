@@ -89,7 +89,7 @@ class Server:
                     self.send_to(nmessage, conn)
                     return False
                 else:
-                    nuser = (data["user"], addr[0], data['pk'], self.__port, data["sport"])
+                    nuser = (data["user"], addr[0], data['pk'], data["sport"])
                     self.__dbconn.insert(nuser, 'user')
                     myinfo = self.__dbconn.get_by_id(1, 'user')
                     nmessage = {
@@ -103,7 +103,7 @@ class Server:
                     self.send_to(nmessage, conn)
                     return True
             if data['command'] == 'send':
-                user = self.__dbconn.connected_user()
+                user = self.__dbconn.connected_user(data['user'], addr[0])
                 if data["message"] == '':
                     self.__logger.debug("No message found!")
                     return False
