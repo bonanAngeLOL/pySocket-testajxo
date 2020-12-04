@@ -10,7 +10,9 @@ class SqliteConn:
                         id_u INTEGER PRIMARY KEY,
                         username TEXT,
                         addr TEXT NOT NULL,
-                        public_k TEXT NOT NULL
+                        public_k TEXT NOT NULL,
+                        client_p INTEGER,
+                        server_p INTEGER
                     );"""
 
     __queue: str = """CREATE TABLE IF NOT EXISTS queue
