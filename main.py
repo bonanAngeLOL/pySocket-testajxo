@@ -77,12 +77,13 @@ class Init(cmd.Cmd):
             return False
         self.__sport = port
         self.__user = user
+        s = self.__dbconn.insert((user, host, self.__pk, port), "user")
+        print("id ", s)
         # -- Start server: IP PORT USER LOGGER
         server = Server(host, int(port), user, self.__dbconn, self.__logger)
         print("server inst")
         proc = Process(
             target=server.start,
-            args=(),
             daemon=True
         )
         proc.start()
@@ -100,24 +101,31 @@ class Init(cmd.Cmd):
         """
         # Start server
         param = self.get_params(line)
+        print("!!!!!!!!param ",param)
         if len(param) != 3:
             raise TypeError
         self.init(*param)
 
     def do_send(self, recipient):
+        print("Trying to send to ", recipient)
         user = self.__dbconn.get_user_by_name(recipient)
         if user is None:
-            self.__logger.debug("You're not connected to %s", user)
+            self.__logger.debug("You're not connected to %s", recipient)
             return False
+        print("Recipient info!!!!!!!!!!!!1!!!!!!!", user)
         client = Conn(user[2], user[4], self.__dbconn, self.__logger)
-        client.prepare_message(input("Write a message"), user[1], self.__user)
+        client.prepare_message(input("Write a message\n"), user[1], self.__user)
+        thread = threading.Thread(
+            target=client.connect,
+            daemon=True
+        )
+        thread.start()
 
-    def conn(self, host: str, port: int, user: str):
+    def conn(self, host: str, port: int):
         """
         Conectarse a un socket
         @param host: str
         @param port: str
-        @param user: str
         @return:
         """
         if not self._check_port(port):
@@ -135,9 +143,9 @@ class Init(cmd.Cmd):
 
     def do_conn(self, args):
         param = self.get_params(args)
-        if len(param) < 3:
+        if len(param) < 2:
             raise TypeError
-        self.conn(param[0], int(param[1]), param[2])
+        self.conn(param[0], int(param[1]))
 
     def do_setuser(self, args):
         param = self.get_params(args)

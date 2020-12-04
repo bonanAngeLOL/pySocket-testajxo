@@ -5,6 +5,7 @@ Socket servidor
 import socket
 import sys
 import json
+import traceback
 
 from concurrent.futures import ThreadPoolExecutor
 
@@ -53,8 +54,11 @@ class Server:
         @return dict
         """
         try:
-            stream = json.loads(conn.recv(1024).decode("utf8"))
+            received = conn.recv(1024).decode("utf8")
+            print("received", received)
+            stream = json.loads(received)
         except json.decoder.JSONDecodeError:
+            print("Getting an error here in json")
             return None
         return stream
 
@@ -66,24 +70,31 @@ class Server:
         @return bool
         """
         try:
-            recipient.send((json.dumps(info)+'\0').encode("utf8"))
+            recipient.send((json.dumps(info)).encode("utf8"))
             return True
         except json.decoder.JSONDecodeError:
             return False
 
     def action(self, conn, addr) -> bool:
+        print("in action method")
+        self.__logger.debug("in action method")
         data = self.__get_stream(conn)
+        print("received", data)
         if data is None or data == '':
+            self.__logger.debug("No data found")
             conn.close()
             return False
         try:
+            self.__logger.debug("Trying")
             if data['command'] == 'connect':
+                self.__logger.debug("command was connect")
                 user = self.__dbconn.get_user_by_name(data['user'])
+                print("Getting user ", user)
                 if user is not None:
                     nmessage = {
-                        'command': 'nmessage',
-                        'message': 'user already connected',
-                        'code': 0
+                        "command": "nmessage",
+                        "message": "user already connected",
+                        "code": 0
                     }
                     self.__logger.debug("User %s was already connected", data['user'])
                     self.send_to(nmessage, conn)
@@ -93,11 +104,12 @@ class Server:
                     self.__dbconn.insert(nuser, 'user')
                     myinfo = self.__dbconn.get_by_id(1, 'user')
                     nmessage = {
-                        'command': 'nmessage',
-                        'message': 'Welcome',
-                        'pk': myinfo[3],
-                        'user': myinfo[1],
-                        'code': 1
+                        "command": "nmessage",
+                        "message": "Welcome",
+                        "pk": myinfo[3],
+                        "user": myinfo[1],
+                        "port": self.__port,
+                        "code": 1
                     }
                     self.__logger.debug("User %s is now connected", data['user'])
                     self.send_to(nmessage, conn)
@@ -114,9 +126,11 @@ class Server:
                     )
                     return False
                 self.__dbconn.insert((user[0], '', data['message']), 'queue')
-                self.__logger.debug("New message from %", user[1])
+                self.__logger.debug("New message from %s\n%s", user[1], data["message"][0:8]+'...')
                 return True
-        except KeyError:
+        except:
+            traceback.print_exc()
+            print("ERROR in action")
             return False
         return False
 
@@ -130,9 +144,12 @@ class Server:
             executor.submit(self.action, conn, addr)
 
     def start(self) -> bool:
+        print("starting")
         # Ask for username at beggining
         self.__skt.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        print("socket options")
         try:
+            print("Trying...")
             self.__skt.bind((self.__host, self.__port))
         except (OSError, PermissionError):
             message = """Port unavailable\n\t
@@ -142,7 +159,13 @@ class Server:
             self.__logger.debug("%s", message)
             return False
         self.__skt.listen(10)
-        with ThreadPoolExecutor(max_workers=10) as executor:
-            self.__listening(executor)
+        print("Now listening 10 connections")
+        try:
+            with ThreadPoolExecutor(max_workers=10) as executor:
+                print("Now on pool executor")
+                self.__listening(executor)
+                print("Thread finished")
+        except:
+            print("ERROR!!!")
         return True
 

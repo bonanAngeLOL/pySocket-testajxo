@@ -1,4 +1,5 @@
 import sqlite3
+import traceback
 
 
 class SqliteConn:
@@ -14,7 +15,7 @@ class SqliteConn:
                         server_p INTEGER
                     );"""
 
-    __queue: str = """CREATE TABLE IF NOT EXISTS queue
+    __queue: str = """CREATE TABLE IF NOT EXISTS queue(
                          id_q INTEGER PRIMARY KEY,
                          sender INTEGER,
                          recipient INTEGER,
@@ -24,9 +25,9 @@ class SqliteConn:
 
     __inserting: dict = {
         'user': """INSERT INTO user
-                    (username, addr, public_k, client_p, server_p)
+                    (username, addr, public_k, server_p)
                     values
-                    (?, ?, ?, ?, ?)""",
+                    (?, ?, ?, ?)""",
         'queue': """INSERT INTO queue
                     (sender, recipient, message)
                     values
@@ -42,10 +43,11 @@ class SqliteConn:
     }
 
     def __init__(self, database: str):
-        self.__conn = sqlite3.connect(database)
+        self.__conn = sqlite3.connect(database, check_same_thread=False)
         self.__cursor = self.__conn.cursor()
         self.__run_query(self.__user)
         self.__run_query(self.__queue)
+        print("DB creted")
 
     def __del__(self):
         """
@@ -75,7 +77,7 @@ class SqliteConn:
         @param table: str
         @return tuple
         """
-        if table not in self.__selecting_id():
+        if table not in self.__selecting_id.keys():
             return ()
         result = self.__run_query(self.__selecting_id[table], (idn, ))
         if len(result) > 0:
@@ -91,12 +93,15 @@ class SqliteConn:
         return self.__run_query("SELECT * FROM users")
 
     def get_user_by_name(self, name: str):
+        print("Getting user by name", name)
         result = self.__run_query(
             "SELECT * FROM user WHERE username = ?",
             (name, )
         )
+        print("result from query", result)
         if len(result) > 0:
             return result[0]
+        print("Getting out from get_user_by_name")
         return None
 
     def connected_user(self, name: str, addr: str):
@@ -117,8 +122,13 @@ class SqliteConn:
         @return list
         """
         try:
+            print("Trying ", query)
+            print("params", parameters)
             self.__cursor.execute(query, parameters)
             self.__conn.commit()
+            print("query finished")
         except Exception:
-            return None
+            traceback.print_exc()
+            print("Exception raised on query")
+            return ()
         return self.__cursor.fetchall()
