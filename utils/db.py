@@ -25,9 +25,9 @@ class SqliteConn:
 
     __inserting: dict = {
         'user': """INSERT INTO user
-                    (username, addr, public_k)
+                    (username, addr, public_k, client_p, server_p)
                     values
-                    (?, ?, ?)""",
+                    (?, ?, ?, ?, ?)""",
         'queue': """INSERT INTO queue
                     (sender, recipient, message)
                     values
