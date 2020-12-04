@@ -71,7 +71,11 @@ class Server:
         except json.decoder.JSONDecodeError:
             return False
 
-    def action(self, data, conn, addr) -> bool:
+    def action(self, conn, addr) -> bool:
+        data = self.__get_stream(conn)
+        if data is None or data == '':
+            conn.close()
+            return False
         try:
             if data['command'] == 'connect':
                 user = self.__dbconn.get_user_by_name(data['user'])
@@ -85,11 +89,14 @@ class Server:
                     self.send_to(nmessage, conn)
                     return False
                 else:
-                    nuser = (data["user"], addr[0]+self.__port, data['pk'])
+                    nuser = (data["user"], addr[0], data['pk'], self.__port, data["sport"])
                     self.__dbconn.insert(nuser, 'user')
+                    myinfo = self.__dbconn.get_by_id(1, 'user')
                     nmessage = {
                         'command': 'nmessage',
                         'message': 'Welcome',
+                        'pk': myinfo[3],
+                        'user': myinfo[1],
                         'code': 1
                     }
                     self.__logger.debug("User %s is now connected", data['user'])
@@ -107,7 +114,7 @@ class Server:
                     )
                     return False
                 self.__dbconn.insert((user[0], '', data['message']), 'queue')
-                self.__logger.debug("Received message from %", user[1])
+                self.__logger.debug("New message from %", user[1])
                 return True
         except KeyError:
             return False
@@ -119,21 +126,11 @@ class Server:
             # Get connection
             conn, addr = self.__skt.accept()
             # Get messages
-            self.__logger.debug("%s", "Request received")
-            data = self.__get_stream(conn)
-            # !!!! REORDER this,
-            #       FIRST accepting connection and
-            #       assign a thread to it
-            # If no message found close the connection
-            if data is None or data == '':
-                conn.close()
-                continue
-            print("data ", data)
-            self.action(data, conn, addr)
-            # Listen to the client using user object to do so!
-            executor.submit(self.listen_client, conn, addr)
+            self.__logger.debug("Request received from %s ", addr[0])
+            executor.submit(self.action, conn, addr)
 
     def start(self) -> bool:
+        # Ask for username at beggining
         self.__skt.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
             self.__skt.bind((self.__host, self.__port))
