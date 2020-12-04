@@ -43,8 +43,8 @@ class SqliteConn:
     def __init__(self, database: str):
         self.__conn = sqlite3.connect(database)
         self.__cursor = self.__conn.cursor()
-        self.__run_query(self.__users)
-        self.__run_query(self.__messages)
+        self.__run_query(self.__user)
+        self.__run_query(self.__queue)
 
     def __del__(self):
         """
