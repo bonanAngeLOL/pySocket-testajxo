@@ -187,13 +187,13 @@ if __name__ == "__main__":
 
     logging.basicConfig(level=logging.DEBUG, format="\t%(message)s")
     # init.set_logger(logging.getLogger('socket')) NOT REQUIRED YET
-
     init = Init(logging.getLogger('socket'))
-
-    NARGS = len(sys.argv)
-
-    if NARGS > 1:
-        init.onecmd(' '.join(sys.argv[1:]))
-        init.cmdloop()
-    else:
-        init.cmdloop()
+    try:
+        NARGS = len(sys.argv)
+        if NARGS > 1:
+            init.onecmd(' '.join(sys.argv[1:]))
+            init.cmdloop()
+        else:
+            init.cmdloop()
+    except KeyboardInterrupt:
+        init.do_EOF("")
