@@ -3,9 +3,7 @@ Socket servidor
 """
 
 import socket
-import sys
 import json
-import traceback
 
 from concurrent.futures import ThreadPoolExecutor
 
@@ -76,20 +74,13 @@ class Server:
             return False
 
     def action(self, conn, addr) -> bool:
-        print("in action method")
-        self.__logger.debug("in action method")
         data = self.__get_stream(conn)
-        print("received", data)
         if data is None or data == '':
-            self.__logger.debug("No data found")
             conn.close()
             return False
         try:
-            self.__logger.debug("Trying")
             if data['command'] == 'connect':
-                self.__logger.debug("command was connect")
                 user = self.__dbconn.get_user_by_name(data['user'])
-                print("Getting user ", user)
                 if user is not None:
                     nmessage = {
                         "command": "nmessage",
@@ -117,25 +108,28 @@ class Server:
             if data['command'] == 'send':
                 user = self.__dbconn.connected_user(data['user'], addr[0])
                 if data["message"] == '':
-                    self.__logger.debug("No message found!")
+                    self.__logger.debug("No message found in request!")
                     return False
                 if user is None:
                     self.__logger.debug(
-                        """%s tried to send a message, but they are not connected""",
-                        data['user']
+                        """%s tried to send a message from %s, 
+                        but they are not connected""",
+                        data['user'],
+                        addr[0]
                     )
                     return False
                 self.__dbconn.insert((user[0], '', data['message']), 'queue')
-                self.__logger.debug("New message from %s\n%s", user[1], data["message"][0:8]+'...')
+                self.__logger.debug(
+                    "New message from %s\n%s",
+                    user[1],
+                    data["message"][0:10]+'...'
+                )
                 return True
-        except:
-            traceback.print_exc()
-            print("ERROR in action")
-            return False
+        except TypeError:
+            self.__logger.debug("Malformed request ignored!")
         return False
 
     def __listening(self, executor: object):
-        print("listening...")
         while True:
             # Get connection
             conn, addr = self.__skt.accept()
@@ -144,12 +138,8 @@ class Server:
             executor.submit(self.action, conn, addr)
 
     def start(self) -> bool:
-        print("starting")
-        # Ask for username at beggining
         self.__skt.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        print("socket options")
         try:
-            print("Trying...")
             self.__skt.bind((self.__host, self.__port))
         except (OSError, PermissionError):
             message = """Port unavailable\n\t
@@ -159,13 +149,12 @@ class Server:
             self.__logger.debug("%s", message)
             return False
         self.__skt.listen(10)
-        print("Now listening 10 connections")
-        try:
-            with ThreadPoolExecutor(max_workers=10) as executor:
-                print("Now on pool executor")
-                self.__listening(executor)
-                print("Thread finished")
-        except:
-            print("ERROR!!!")
+        self.__logger.debug(
+            "Now listening on %s:%i",
+            self.__host,
+            self.__port
+        )
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            self.__listening(executor)
         return True
 

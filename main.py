@@ -32,6 +32,12 @@ class Init(cmd.Cmd):
                     datetime.datetime.now().strftime('%Y%m%d%H%M%S')
                 )
             ):
+        """
+        @param logger: configured Logging options
+        @type logger: logging.Logger
+        @param dbconn: Database connection
+        @type dbconn: object
+        """
         super().__init__()
         self.__logger = logger
         self.prompt = " ~> "
@@ -39,19 +45,19 @@ class Init(cmd.Cmd):
         self.__histfile_size = 1000
         self.__dbconn = dbconn
 
-    def __del__(self):
-        pass
-
     def set_logger(self, logger):
         """
+        Set a logger instance
         Logger setter
+        @param: logger
         """
         self.__logger = logger
 
     @staticmethod
     def _check_port(port: str) -> bool:
         """
-        Revisar si el puerto es un valor numerico
+        Check if port is numeric.
+        @param port: Avilable port for binding
         @type port: str
         @return: bool
         """
@@ -59,15 +65,33 @@ class Init(cmd.Cmd):
             return True
         return port.isdigit()
 
-    def get_params(self, line):
+    def get_params(self, args):
         """
-        Getting list from string
+        Getting list of params from string
+        @line
         """
-        return line.split(" ")
+        return args.split(" ")
+
+    def save_user(self, conn, user_data):
+        """
+        Save user info in database
+        @param conn: DB connection
+        @type conn: obj
+        @param user_data: User's info to be saved
+        @type: tuple
+        @return:
+        """
+        return conn.insert(user_data, "user")
 
     def init(self, host, port, user=__user):
         """
         Init as server
+        @param host: IP of host
+        @type host str
+        @param port: An available port
+        @type port: int
+        @param user: User name
+        @type user: str
         """
         if not self._check_port(port):
             self.__logger.debug('Invalid port')
@@ -77,23 +101,18 @@ class Init(cmd.Cmd):
             return False
         self.__sport = port
         self.__user = user
-        s = self.__dbconn.insert((user, host, self.__pk, port), "user")
-        print("id ", s)
-        # -- Start server: IP PORT USER LOGGER
-        server = Server(host, int(port), user, self.__dbconn, self.__logger)
-        print("server inst")
+        self.save_user(self.__dbconn, (user, host, self.__pk, port))
         proc = Process(
-            target=server.start,
+            target=Server(
+                host,
+                int(port),
+                user,
+                self.__dbconn,
+                self.__logger
+            ).start,
             daemon=True
         )
         proc.start()
-        self.__logger.debug(
-                    "Listening now on: \n\t\t %s:%s",
-                    host,
-                    port
-                )
-        return True
-        # starting server and wait for users
 
     def do_init(self, line):
         """
@@ -153,6 +172,7 @@ class Init(cmd.Cmd):
             raise TypeError
         self.__user = args[0]
 
+    # Overwritten functions from cmd class
     def console(self):
         self.cmdloop()
 
@@ -176,17 +196,28 @@ class Init(cmd.Cmd):
             readline.set_history_length(self.__histfile_size)
             readline.write_history_file(self.__histfile)
 
-    def do_EOF(self, line):
+    def do_EOF(self, args):
+        """
+        Exit from cmdloop
+        @param line: arguments
+        @type line: str
+        @return:
+        """
         return True
 
-    def do_exit(self, line):
-        return self.do_EOF(line)
+    def do_exit(self, args):
+        """
+        Exit from cmdloop
+        @param line: arguments
+        @type line: str
+        @return:
+        """
+        return self.do_EOF(args)
 
 
 if __name__ == "__main__":
 
     logging.basicConfig(level=logging.DEBUG, format="\t%(message)s")
-    # init.set_logger(logging.getLogger('socket')) NOT REQUIRED YET
     init = Init(logging.getLogger('socket'))
     try:
         NARGS = len(sys.argv)
@@ -196,4 +227,5 @@ if __name__ == "__main__":
         else:
             init.cmdloop()
     except KeyboardInterrupt:
+        # On ^c, closing cmdloop properly
         init.do_EOF("")
