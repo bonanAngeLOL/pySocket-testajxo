@@ -109,6 +109,17 @@ class SqliteConn:
             return result[0]
         return None
 
+    def get_names(self, name: str):
+        return list(
+            map(
+                lambda name_r: name_r[0],
+                self.__run_query(
+                    "SELECT username FROM user WHERE username like ?",
+                    (name+'%', )
+                )
+            )
+        )
+
     def __run_query(self, query: str, parameters=()) -> list:
         """
         Corre una consulta de manera segura

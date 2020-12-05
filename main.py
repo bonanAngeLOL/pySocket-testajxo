@@ -138,6 +138,9 @@ class Init(cmd.Cmd):
         )
         thread.start()
 
+    def complete_send(self, text, line, begidx, endidx):
+        return self.__dbconn.get_names(text)
+
     def conn(self, host: str, port: int):
         """
         Conectarse a un socket
