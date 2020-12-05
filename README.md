@@ -50,9 +50,7 @@ python main.py conn [server_ip] [server_port]
 ### Todo
 - [ ] Add Thread blocking in database operations
 - [ ] Functions to read messages from database
-- [ ] Received message indcator in prompt
-- [ ] function to get connected users
-- [ ] Tidy the code up 
+- [x] function to get connected users
+- [x] Tidy the code up 
 - [ ] Add docs
-- [ ] Redirect server logging to log file
 - [ ] Cypher and Decrypt functions on messages
