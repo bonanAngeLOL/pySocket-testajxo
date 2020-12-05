@@ -36,7 +36,11 @@ class Server:
         """
         while True:
             message = self.__get_stream(conn)
-            print("From:\t", addr, f"\nmessage: \n{message}")
+            self.__logger.debug(
+                "From: %s\nmessage:\n%s",
+                addr[0],
+                message
+            )
 
     def add_user(self, ip, port, username):
         """
@@ -55,7 +59,6 @@ class Server:
             received = conn.recv(1024).decode("utf8")
             stream = json.loads(received)
         except json.decoder.JSONDecodeError:
-            print("Getting an error here in json")
             return None
         return stream
 
