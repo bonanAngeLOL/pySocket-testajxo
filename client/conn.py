@@ -4,6 +4,7 @@ Connect
 import socket
 import json
 
+
 class Conn:
     """
     Connect to socket
@@ -39,7 +40,6 @@ class Conn:
         """
         try:
             received = conn.recv(1024).decode("utf8")
-            print("received string", received)
             stream = json.loads(received)
         except json.decoder.JSONDecodeError:
             return None
@@ -102,16 +102,7 @@ class Conn:
         return False
 
     def __sending(self):
-        # self.__skt.send("You should receive this".encode("utf8"))
-        self.__logger.debug("Connecting to server")
         self.__action()
-        # self.get_stream(self.__skt)
-        # print("Write a command")
-        # while True:
-        #     command = input(" > ")
-        #     if command == 'exit':
-        #         break
-        #     self.__commander(command)
         self.__skt.shutdown(0)
         self.__skt.close()
 
@@ -121,14 +112,9 @@ class Conn:
         Si la conexion fue exitosa, retorna True
         @return: bool
         """
-        self.__logger.debug("%s", "connecting")
+        self.__logger.debug("connecting to %s:%i", self.__host, self.__port)
         try:
-            print("Waiting for response")
-            self.__logger.debug("%s", "waiting for response")
-            print("Connecting to !!!!!!!!!!!!!!!!", self.__host, self.__port)
             self.__skt.connect((self.__host, self.__port))
-            self.__logger.debug("Establishing connection to %s:%s", self.__host, self.__port)
         except OSError:
             return False
-        # return self.__skt
         self.__sending()

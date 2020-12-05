@@ -45,11 +45,12 @@ class Init(cmd.Cmd):
         self.__histfile_size = 1000
         self.__dbconn = dbconn
 
-    def set_logger(self, logger):
+    def set_logger(self, logger: object):
         """
         Set a logger instance
         Logger setter
         @param: logger
+        @type: logging.Logger
         """
         self.__logger = logger
 
@@ -120,18 +121,15 @@ class Init(cmd.Cmd):
         """
         # Start server
         param = self.get_params(line)
-        print("!!!!!!!!param ",param)
         if len(param) != 3:
             raise TypeError
         self.init(*param)
 
     def do_send(self, recipient):
-        print("Trying to send to ", recipient)
         user = self.__dbconn.get_user_by_name(recipient)
         if user is None:
             self.__logger.debug("You're not connected to %s", recipient)
             return False
-        print("Recipient info!!!!!!!!!!!!1!!!!!!!", user)
         client = Conn(user[2], user[4], self.__dbconn, self.__logger)
         client.prepare_message(input("Write a message\n"), user[1], self.__user)
         thread = threading.Thread(
@@ -150,10 +148,8 @@ class Init(cmd.Cmd):
         if not self._check_port(port):
             self.__logger.debug('Invalid port')
             return False
-        self.__logger.debug("Trying to connect")
         client = Conn(host, int(port), self.__dbconn, self.__logger)
         client.prepare_identity(self.__user, self.__pk, self.__sport)
-        print(client)
         thread = threading.Thread(
             target=client.connect,
             daemon=True

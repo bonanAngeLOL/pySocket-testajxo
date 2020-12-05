@@ -47,7 +47,6 @@ class SqliteConn:
         self.__cursor = self.__conn.cursor()
         self.__run_query(self.__user)
         self.__run_query(self.__queue)
-        print("DB creted")
 
     def __del__(self):
         """
@@ -93,15 +92,12 @@ class SqliteConn:
         return self.__run_query("SELECT * FROM users")
 
     def get_user_by_name(self, name: str):
-        print("Getting user by name", name)
         result = self.__run_query(
             "SELECT * FROM user WHERE username = ?",
             (name, )
         )
-        print("result from query", result)
         if len(result) > 0:
             return result[0]
-        print("Getting out from get_user_by_name")
         return None
 
     def connected_user(self, name: str, addr: str):
@@ -122,13 +118,8 @@ class SqliteConn:
         @return list
         """
         try:
-            print("Trying ", query)
-            print("params", parameters)
             self.__cursor.execute(query, parameters)
             self.__conn.commit()
-            print("query finished")
         except Exception:
-            traceback.print_exc()
-            print("Exception raised on query")
             return ()
         return self.__cursor.fetchall()

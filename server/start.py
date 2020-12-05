@@ -53,7 +53,6 @@ class Server:
         """
         try:
             received = conn.recv(1024).decode("utf8")
-            print("received", received)
             stream = json.loads(received)
         except json.decoder.JSONDecodeError:
             print("Getting an error here in json")
