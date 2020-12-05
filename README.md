@@ -47,7 +47,7 @@ python main.py conn [server_ip] [server_port]
 - [x] Cuando  los  sockets  establecen  comunicación,  el  socketcliente  envíasu  nombre  y  llave públicaal socketservidor, este responde con su nombre yllave pública.
 - [x] Cuando se ha llevado a cabo el intercambio de llaves públicas, se comienza la comunicación segura de acuerdo al diagrama de comunicación
 
-### Todo
+### ToDo:
 - [ ] Add Thread blocking in database operations
 - [ ] Functions to read messages from database
 - [x] function to get connected users
