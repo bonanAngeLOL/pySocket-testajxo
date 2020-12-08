@@ -3,12 +3,11 @@ Socket servidor
 """
 
 import socket
-import json
-
+from utils import ScktUtils
 from concurrent.futures import ThreadPoolExecutor
 
 
-class Server:
+class Server(ScktUtils):
 
     def __init__(
         self,
@@ -43,33 +42,6 @@ class Server:
     def __def__(self):
         self.__skt.close()
 
-    @classmethod
-    def __get_stream(cls, conn: object) -> dict:
-        """
-        Gets info from recv and decodes it as JSON
-        @param conn : socket
-        @return dict
-        """
-        try:
-            received = conn.recv(1024).decode("utf8")
-            stream = json.loads(received)
-        except json.decoder.JSONDecodeError:
-            return None
-        return stream
-
-    def send_to(self, info: dict, recipient: socket.socket) -> bool:
-        """
-        Send info formatted as JSON
-        @param info: dict
-        @param recipient: socket.socket
-        @return bool
-        """
-        try:
-            recipient.send((json.dumps(info)).encode("utf8"))
-            return True
-        except json.decoder.JSONDecodeError:
-            return False
-
     def action(self, conn, addr) -> bool:
         """
         Executes actions accordingly to user command requested
@@ -79,7 +51,7 @@ class Server:
         @type addr: tuple
         @return: bool
         """
-        data = self.__get_stream(conn)
+        data = self._get_stream(conn)
         if data is None or data == '':
             conn.close()
             return False
@@ -93,7 +65,7 @@ class Server:
                         "code": 0
                     }
                     self.__logger.debug("User %s was already connected", data['user'])
-                    self.send_to(nmessage, conn)
+                    self._send_to(nmessage, conn)
                     return False
                 else:
                     nuser = (data["user"], addr[0], data['pk'], data["sport"])
@@ -108,7 +80,7 @@ class Server:
                         "code": 1
                     }
                     self.__logger.debug("User %s is now connected", data['user'])
-                    self.send_to(nmessage, conn)
+                    self._send_to(nmessage, conn)
                     return True
             if data['command'] == 'send':
                 user = self.__dbconn.connected_user(data['user'], addr[0])
