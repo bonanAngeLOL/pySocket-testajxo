@@ -45,22 +45,8 @@ class ECCcrypt(crypto):
         public_key = raw_key.public_key.to_hex()
         return public_key, private_key
 
-    def crypt(self, message: str, key: bytes) -> bytes:
-        return encrypt(key, message.encode('utf8'))
+    def crypt(self, message: str, key: str) -> bytes:
+        return encrypt(key, message)
 
     def decrypt(self, cmessage: bytes, key: str) -> str:
-        return decrypt(key, cmessage).decode('utf8')
-
-
-class RSAcrypt(crypto):
-    """
-    Implentacion de Crypto() para cifrar y descifrar con RSA
-    """
-    def get_keys(self) -> tuple:
-        return rsa.newkeys(1024)
-
-    def crypt(self, message: str, key: rsa.PublicKey) -> bytes:
-        return rsa.encrypt(message.encode('utf8'), key)
-
-    def decrypt(self, cmessage: bytes, key: rsa.PrivateKey) -> str:
-        return rsa.decrypt(cmessage, key).decode('utf8')
+        return decrypt(key, cmessage)
