@@ -12,7 +12,8 @@ class SqliteConn:
                         username TEXT,
                         addr TEXT NOT NULL,
                         public_k TEXT NOT NULL,
-                        server_p INTEGER
+                        server_p INTEGER,
+                        private_k TEXT DEFAULT NULL
                     );"""
 
     __queue: str = """CREATE TABLE IF NOT EXISTS queue(
@@ -25,9 +26,9 @@ class SqliteConn:
 
     __inserting: dict = {
         'user': """INSERT INTO user
-                    (username, addr, public_k, server_p)
+                    (username, addr, public_k, server_p, private_k)
                     values
-                    (?, ?, ?, ?)""",
+                    (?, ?, ?, ?, ?)""",
         'queue': """INSERT INTO queue
                     (sender, recipient, message)
                     values
@@ -132,6 +133,22 @@ class SqliteConn:
         if len(result) > 0:
             return result[0]
         return None
+
+    def get_sender_messages(self, name):
+        """
+        Query a list of messages sent by an specific sender
+        @param name:
+        @return:
+        """
+        query = """ select 
+                        u.username, q.timest, q.message 
+                    from 
+                        queue q, user u
+                    where
+                        u.id_u = q.sender and
+                        u.username = ? and 
+                        q.recipient = '';"""
+        return self.__run_query(query, (name, ))
 
     def get_names(self, name: str) -> list:
         """

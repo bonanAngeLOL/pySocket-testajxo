@@ -13,16 +13,7 @@ import datetime
 from client.conn import Conn
 from server.start import Server
 from utils.db import SqliteConn
-
-
-def get_params(args) -> list:
-    """
-    Getting list of params from string
-    @param args: Arguments from command line
-    @type args: str
-    @return list
-    """
-    return args.split(" ")
+from utils.crypto import crypto, ECCcrypt
 
 
 class Init(cmd.Cmd):
@@ -33,16 +24,18 @@ class Init(cmd.Cmd):
     intro = """Type a command to start or connect to host
                 \n Start a server before anything else"""
     __user = None
-    __pk = 1
     __sport = None
     __dbname = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+    __pubk: None
+    __privk: None
 
     def __init__(
                 self,
                 logger: logging.Logger = logging.getLogger(),
-                dbconn=SqliteConn(
+                dbconn: SqliteConn =SqliteConn(
                     datetime.datetime.now().strftime(__dbname)
-                )
+                ),
+                crypt_util: crypto = ECCcrypt()
             ):
         """
         @param logger: configured Logging options
@@ -51,11 +44,13 @@ class Init(cmd.Cmd):
         @type dbconn: object
         """
         super().__init__()
+        self.__crypt_util = crypt_util
         self.__logger = logger
         self.prompt = " ~> "
         self.__histfile = path.expanduser('~/.babilu_history')
         self.__histfile_size = 1000
         self.__dbconn = dbconn
+        self.__pubk, self.__privk = self.__crypt_util.get_keys()
 
     def __del__(self):
         remove(self.__dbname)
@@ -68,6 +63,16 @@ class Init(cmd.Cmd):
         @type: logging.Logger
         """
         self.__logger = logger
+
+    @staticmethod
+    def get_params(args) -> list:
+        """
+        Getting list of params from string
+        @param args: Arguments from command line
+        @type args: str
+        @return list
+        """
+        return args.split(" ")
 
     @staticmethod
     def check_port(port: str) -> bool:
@@ -100,12 +105,13 @@ class Init(cmd.Cmd):
             return False
         self.__sport = port
         self.__user = user
-        self.__dbconn.insert((user, host, self.__pk, port), "user")
+        self.__dbconn.insert((user, host, self.__pubk, port, self.__privk), "user")
         proc = Process(
             target=Server(
                 host,
                 int(port),
                 user,
+                self.__privk,
                 self.__dbconn,
                 self.__logger
             ).start,
@@ -145,7 +151,7 @@ class Init(cmd.Cmd):
                 Try a different port!
         """
         # Start server
-        param = get_params(line)
+        param = self.get_params(line)
         if len(param) != 3:
             raise TypeError
         self.init(*param)
@@ -187,12 +193,50 @@ class Init(cmd.Cmd):
             self.__logger.debug("You're not connected to %s", recipient)
             return False
         client = Conn(user[2], user[4], self.__dbconn, self.__logger)
-        client.prepare_message(input("Write a message\n"), user[1], self.__user)
+        client.prepare_message(
+            self.__crypt_util.crypt(
+                input(
+                    "Write a message\n"
+                ),
+                user[3]
+            ),
+            user[1],
+            self.__user
+        )
         thread = threading.Thread(
             target=client.connect,
             daemon=True
         )
         thread.start()
+
+    def do_inbox(self, args):
+        """
+        Function to read messages from user
+        @param args:
+        @return:
+        """
+        messages = self.__dbconn.get_sender_messages(args)
+        for message in messages:
+            self.__logger.debug(
+                "%s %s %s",
+                message[0],
+                message[1],
+                self.__crypt_util.decrypt(
+                    message[2],
+                    self.__privk
+                )
+            )
+
+    def complete_inbox(self, text, line, begidx, endidx):
+        """
+        Function to autocomplete names in inbox command from cmd
+        @param text: name or first letter from a username
+        @type text: str
+        @param line: str
+        @param begidx: str
+        @param endidx:
+        """
+        return self.__dbconn.get_names(text)
 
     def complete_send(self, text, line, begidx, endidx):
         """
@@ -218,7 +262,7 @@ class Init(cmd.Cmd):
             self.__logger.debug('Invalid port')
             return False
         client = Conn(host, int(port), self.__dbconn, self.__logger)
-        client.prepare_identity(self.__user, self.__pk, self.__sport)
+        client.prepare_identity(self.__user, self.__pubk, self.__sport)
         thread = threading.Thread(
             target=client.connect,
             daemon=True
@@ -248,7 +292,7 @@ class Init(cmd.Cmd):
             notified, e.g.:
                 Now connected to [server's username]
         """
-        param = get_params(args)
+        param = self.get_params(args)
         if len(param) < 2:
             raise TypeError
         self.conn(param[0], int(param[1]))
@@ -263,6 +307,8 @@ class Init(cmd.Cmd):
         except TypeError as err:
             self.__logger.debug("%s", "Invalid arguments")
             self.__logger.debug("%s", err)
+            import traceback
+            traceback.print_exc()
             return False
 
     def emptyline(self):

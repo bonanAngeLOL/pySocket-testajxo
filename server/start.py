@@ -10,34 +10,37 @@ from utils.scktUtils import scktUtils
 class Server(scktUtils):
 
     def __init__(
-        self,
-        host,
-        port,
-        user,
-        dbconn,
-        logger
+            self,
+            host,
+            port,
+            user,
+            privk,
+            dbconn,
+            logger
     ):
         """
-
         @param host: Server's hostname
         @type host: str
         @param port: Server's port
         @type port: int
         @param user: Server's username
         @type user: str
+        @param privk: Private key
+        @type privk: object
         @param dbconn: Database connection
         @type dbconn: object
         @param logger: Configured Logger instance
         @type logger: logging.Logger
         """
+        self.__privk = privk
         self.__host = host
         self.__port = port
         self.__user = user
         self.__dbconn = dbconn
         self.__logger = logger
         self.__skt = socket.socket(
-                        socket.AF_INET, socket.SOCK_STREAM
-                     )
+            socket.AF_INET, socket.SOCK_STREAM
+        )
 
     def __def__(self):
         self.__skt.close()
@@ -68,7 +71,7 @@ class Server(scktUtils):
                     self._send_to(nmessage, conn)
                     return False
                 else:
-                    nuser = (data["user"], addr[0], data['pk'], data["sport"])
+                    nuser = (data["user"], addr[0], data['pk'], data["sport"], None)
                     self.__dbconn.insert(nuser, 'user')
                     myinfo = self.__dbconn.get_by_id(1, 'user')
                     nmessage = {
@@ -95,14 +98,19 @@ class Server(scktUtils):
                         addr[0]
                     )
                     return False
-                self.__dbconn.insert((user[0], '', data['message']), 'queue')
+                import utils.crypto
+                clear_message = utils.crypto.ECCcrypt(). \
+                    decrypt(data['message'], self.__privk)
+                self.__dbconn.insert((user[0], '', data["message"]), 'queue')
                 self.__logger.debug(
                     "New message from %s\n%s",
                     user[1],
-                    data["message"][0:10]+'...'
+                    clear_message[0:10] + '...'
                 )
                 return True
         except TypeError:
+            import traceback
+            traceback.print_exc()
             self.__logger.debug("Malformed request ignored!")
         return False
 

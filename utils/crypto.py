@@ -1,6 +1,7 @@
 import rsa
 from ecies.utils import generate_eth_key
 from ecies import encrypt, decrypt
+import base64
 
 
 class crypto:
@@ -45,8 +46,16 @@ class ECCcrypt(crypto):
         public_key = raw_key.public_key.to_hex()
         return public_key, private_key
 
-    def crypt(self, message: str, key: str) -> bytes:
-        return encrypt(key, message)
+    def crypt(self, message: str, key: str) -> str:
+        return base64.b64encode(
+                    encrypt(
+                        key,
+                        message.encode("utf8")
+                    )
+                ).decode("utf8")
 
-    def decrypt(self, cmessage: bytes, key: str) -> str:
-        return decrypt(key, cmessage)
+    def decrypt(self, cmessage: str, key: str) -> str:
+        return decrypt(
+            key,
+            base64.b64decode(cmessage)
+        ).decode("utf8")

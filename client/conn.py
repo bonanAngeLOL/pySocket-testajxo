@@ -101,7 +101,8 @@ class Conn(scktUtils):
                 data['user'],
                 self.__host,
                 data['pk'],
-                data["port"]
+                data["port"],
+                None
             )
             self.__dbconn.insert(user, "user")
             self.__logger.debug("Now connected to %s", data['user'])
