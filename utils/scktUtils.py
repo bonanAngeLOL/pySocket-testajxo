@@ -1,7 +1,10 @@
 import json
 
 
-class ScktUtils:
+class scktUtils:
+
+    def __init__(*arg):
+        pass
 
     def _get_stream(self, conn: object) -> dict:
         """
@@ -16,7 +19,7 @@ class ScktUtils:
             return None
         return stream
 
-    def _send_to(self, info: dict, recipient: socket.socket) -> bool:
+    def _send_to(self, info: dict, recipient: object) -> bool:
         """
         Send info formatted as JSON
         @param info: dict
