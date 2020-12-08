@@ -1,4 +1,5 @@
 import sqlite3
+from threading import Lock
 
 
 class SqliteConn:
@@ -41,11 +42,14 @@ class SqliteConn:
                     where id_q = ?"""
     }
 
-    def __init__(self, database: str):
+    def __init__(self, database: str, lock: Lock = Lock()):
         """
         @param database: database name
         @type database: str
+        @param lock: Lock object to protect insert
+        @type lock: Lock
         """
+        self.__lock = lock
         self.__conn = sqlite3.connect(database, check_same_thread=False)
         self.__cursor = self.__conn.cursor()
         self.__run_query(self.__user)
@@ -68,9 +72,10 @@ class SqliteConn:
         @type table: str
         @return: int
         """
-        if table not in self.__inserting.keys():
-            return 0
-        self.__run_query(self.__inserting[table], params)
+        with self.__lock:
+            if table not in self.__inserting.keys():
+                return 0
+            self.__run_query(self.__inserting[table], params)
         return self.__cursor.lastrowid
 
     def get_by_id(self, idn: int, table: str) -> tuple:
