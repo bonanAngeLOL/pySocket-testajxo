@@ -3,7 +3,7 @@ import json
 
 class ScktUtils:
 
-    def __get_stream(self, conn: object) -> dict:
+    def _get_stream(self, conn: object) -> dict:
         """
         Gets info from recv and decodes it as JSON to dict
         @param conn : socket
@@ -16,7 +16,7 @@ class ScktUtils:
             return None
         return stream
 
-    def send_to(self, info: dict, recipient: socket.socket) -> bool:
+    def _send_to(self, info: dict, recipient: socket.socket) -> bool:
         """
         Send info formatted as JSON
         @param info: dict
