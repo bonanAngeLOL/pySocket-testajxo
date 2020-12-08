@@ -43,22 +43,6 @@ class Server:
     def __def__(self):
         self.__skt.close()
 
-    def listen_client(self, conn, addr):
-        """
-        Listening to client
-        @param addr: address info from accepted connection
-        @type addr: tuple
-        @param conn: Connection socket object
-        @type conn: socket.socket
-        """
-        while True:
-            message = self.__get_stream(conn)
-            self.__logger.debug(
-                "From: %s\nmessage:\n%s",
-                addr[0],
-                message
-            )
-
     @classmethod
     def __get_stream(cls, conn: object) -> dict:
         """
@@ -187,4 +171,3 @@ class Server:
         with ThreadPoolExecutor(max_workers=10) as executor:
             self.__listening(executor)
         return True
-

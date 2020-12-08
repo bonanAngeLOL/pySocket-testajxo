@@ -15,6 +15,16 @@ from server.start import Server
 from utils.db import SqliteConn
 
 
+def get_params(args) -> list:
+    """
+    Getting list of params from string
+    @param args: Arguments from command line
+    @type args: str
+    @return list
+    """
+    return args.split(" ")
+
+
 class Init(cmd.Cmd):
     """
     Init class
@@ -46,7 +56,7 @@ class Init(cmd.Cmd):
         self.__histfile_size = 1000
         self.__dbconn = dbconn
 
-    def set_logger(self, logger: object):
+    def set_logger(self, logger: logging.Logger):
         """
         Set a logger instance
         Logger setter
@@ -56,7 +66,7 @@ class Init(cmd.Cmd):
         self.__logger = logger
 
     @staticmethod
-    def _check_port(port: str) -> bool:
+    def check_port(port: str) -> bool:
         """
         Check if port is numeric.
         @param port: Avilable port for binding
@@ -66,15 +76,6 @@ class Init(cmd.Cmd):
         if isinstance(port, int):
             return True
         return port.isdigit()
-
-    def get_params(self, args) -> list:
-        """
-        Getting list of params from string
-        @param args: Arguments from command line
-        @type args: str
-        @return list
-        """
-        return args.split(" ")
 
     def init(self, host, port, user=__user) -> bool:
         """
@@ -87,7 +88,7 @@ class Init(cmd.Cmd):
         @type user: str
         @return bool
         """
-        if not self._check_port(port):
+        if not self.check_port(port):
             self.__logger.debug('Invalid port')
             return False
         if user is None:
@@ -121,12 +122,11 @@ class Init(cmd.Cmd):
                 python cmd -> init 192.168.0.100 8090 Oscar
                 bash: $ python3 main.py init 192.168.0.100 8090 Oscar
 
-            @param host: IP address of current's object server
-            @type host: str
-            @param port: Available port where server will be listening
-            @type port: int
-            @param username: str
-            @type username: str
+            @param line: arguments from Cmd
+
+            host: IP address of current's object server
+            port: Available port where server will be listening
+            username: str
 
             When you try to start a server, you'll be notified if port
             was successfully binded. e.g.:
@@ -141,7 +141,7 @@ class Init(cmd.Cmd):
                 Try a different port!
         """
         # Start server
-        param = self.get_params(line)
+        param = get_params(line)
         if len(param) != 3:
             raise TypeError
         self.init(*param)
@@ -210,7 +210,7 @@ class Init(cmd.Cmd):
         @type port: int
         @return:
         """
-        if not self._check_port(port):
+        if not self.check_port(port):
             self.__logger.debug('Invalid port')
             return False
         client = Conn(host, int(port), self.__dbconn, self.__logger)
@@ -230,10 +230,10 @@ class Init(cmd.Cmd):
             Example
                 ~> conn 192.168.0.1 8085
 
-            @param host: Server's Hostname or IP
-            @type host: str
-            @param port: Server's port
-            @type port: int
+            host: Server's Hostname or IP
+            port: Server's port
+            @param args: Arguments from cmd
+            @type args: str
 
             When you try to connect a message will be displayed
             to make you know that it is attempting to connect to server
@@ -244,7 +244,7 @@ class Init(cmd.Cmd):
             notified, e.g.:
                 Now connected to [server's username]
         """
-        param = self.get_params(args)
+        param = get_params(args)
         if len(param) < 2:
             raise TypeError
         self.conn(param[0], int(param[1]))

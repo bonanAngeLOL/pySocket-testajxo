@@ -82,7 +82,7 @@ class Conn:
         @param pk: public key
         @type pk: str
         @param sport: Client's Server port, where client listens requests
-        @type sport: str
+        @type sport: int
         """
         self.__user = user
         self.__pk = pk
