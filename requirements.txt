@@ -1,2 +1,17 @@
+asn1crypto==1.4.0
+cffi==1.14.4
+coincurve==13.0.0
+cytoolz==0.11.0
+eciespy==0.3.8
+eth-hash==0.2.0
+eth-keys==0.3.3
+eth-typing==2.2.2
+eth-utils==1.9.5
 jedi==0.17.2
 parso==0.7.1
+pkg-resources==0.0.0
+pyasn1==0.4.8
+pycparser==2.20
+pycryptodome==3.9.9
+rsa==4.6
+toolz==0.11.1
