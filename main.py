@@ -3,9 +3,9 @@ socket
 """
 import cmd
 from multiprocessing import Process
+from os import path, remove
 import logging
 import sys
-import os.path
 import readline
 import threading
 import datetime
@@ -35,12 +35,13 @@ class Init(cmd.Cmd):
     __user = None
     __pk = 1
     __sport = None
+    __dbname = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
 
     def __init__(
                 self,
                 logger: logging.Logger = logging.getLogger(),
                 dbconn=SqliteConn(
-                    datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+                    datetime.datetime.now().strftime(__dbname)
                 )
             ):
         """
@@ -52,9 +53,12 @@ class Init(cmd.Cmd):
         super().__init__()
         self.__logger = logger
         self.prompt = " ~> "
-        self.__histfile = os.path.expanduser('~/.babilu_history')
+        self.__histfile = path.expanduser('~/.babilu_history')
         self.__histfile_size = 1000
         self.__dbconn = dbconn
+
+    def __del__(self):
+        remove(self.__dbname)
 
     def set_logger(self, logger: logging.Logger):
         """
@@ -265,7 +269,7 @@ class Init(cmd.Cmd):
         pass
 
     def preloop(self):
-        if readline and os.path.exists(self.__histfile):
+        if readline and path.exists(self.__histfile):
             readline.read_history_file(self.__histfile)
 
     def postloop(self):
