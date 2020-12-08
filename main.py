@@ -20,7 +20,8 @@ class Init(cmd.Cmd):
     Init class
     """
     __logger: logging.Logger
-    intro = "Type a command to start o connect to host"
+    intro = """Type a command to start or connect to host
+                \n Start a server before anything else"""
     __user = None
     __pk = 1
     __sport = None
@@ -66,25 +67,16 @@ class Init(cmd.Cmd):
             return True
         return port.isdigit()
 
-    def get_params(self, args):
+    def get_params(self, args) -> list:
         """
         Getting list of params from string
-        @line
+        @param args: Arguments from command line
+        @type args: str
+        @return list
         """
         return args.split(" ")
 
-    def save_user(self, conn, user_data):
-        """
-        Save user info in database
-        @param conn: DB connection
-        @type conn: obj
-        @param user_data: User's info to be saved
-        @type: tuple
-        @return:
-        """
-        return conn.insert(user_data, "user")
-
-    def init(self, host, port, user=__user):
+    def init(self, host, port, user=__user) -> bool:
         """
         Init as server
         @param host: IP of host
@@ -93,6 +85,7 @@ class Init(cmd.Cmd):
         @type port: int
         @param user: User name
         @type user: str
+        @return bool
         """
         if not self._check_port(port):
             self.__logger.debug('Invalid port')
@@ -102,7 +95,7 @@ class Init(cmd.Cmd):
             return False
         self.__sport = port
         self.__user = user
-        self.save_user(self.__dbconn, (user, host, self.__pk, port))
+        self.__dbconn.insert((user, host, self.__pk, port), "user")
         proc = Process(
             target=Server(
                 host,
@@ -114,10 +107,38 @@ class Init(cmd.Cmd):
             daemon=True
         )
         proc.start()
+        return True
 
     def do_init(self, line):
         """
-        Call to init() from python cmd
+        init - Start a server socket to listen message requests
+
+            use:
+                python cmd: ~> init [host] [port] [username]
+                bash: $ python3 main.py init [host] [port] [username]
+
+            example:
+                python cmd -> init 192.168.0.100 8090 Oscar
+                bash: $ python3 main.py init 192.168.0.100 8090 Oscar
+
+            @param host: IP address of current's object server
+            @type host: str
+            @param port: Available port where server will be listening
+            @type port: int
+            @param username: str
+            @type username: str
+
+            When you try to start a server, you'll be notified if port
+            was successfully binded. e.g.:
+
+                Now listening on 192.168.0.21:8095
+
+            If port, address or anything else prevents this program to bind
+            a port you'll get an error.
+
+                Either you don't have permission or
+                port is already in use.
+                Try a different port!
         """
         # Start server
         param = self.get_params(line)
@@ -125,7 +146,38 @@ class Init(cmd.Cmd):
             raise TypeError
         self.init(*param)
 
-    def do_send(self, recipient):
+    def do_send(self, recipient: str) -> bool:
+        """
+        send - Send a message to server
+
+            use:
+                ~> send [server username]
+
+            example:
+                ~> send oscar
+
+            @param recipient: name of recipient (to be queried to database)
+            @type recipient: str
+            @return: bool
+
+            After send command is executed you'll be asked to type a
+            message to be sent, to send that message just press Enter key. e.g.
+
+            ~> send julia
+            Write a message
+            [Input a message] + Enter
+
+            To list all available servers type "send " + <Tab>
+            Using tabulator will display a list of current servers. e.g.:
+
+            ~> send <TAB>
+            angel   juan    julia   pancho
+
+            Trying to message a non connected server will lead to error
+            ~> send ana
+                You're not connected to ana
+
+        """
         user = self.__dbconn.get_user_by_name(recipient)
         if user is None:
             self.__logger.debug("You're not connected to %s", recipient)
@@ -139,13 +191,23 @@ class Init(cmd.Cmd):
         thread.start()
 
     def complete_send(self, text, line, begidx, endidx):
+        """
+        Function to autocomplete names in send command from cmd
+        @param text: name or first letter from a username
+        @type text: str
+        @param line: str
+        @param begidx: str
+        @param endidx:
+        """
         return self.__dbconn.get_names(text)
 
     def conn(self, host: str, port: int):
         """
-        Conectarse a un socket
-        @param host: str
-        @param port: str
+        Connect to server
+        @param host: Server's address
+        @type host: str
+        @param port: server's port
+        @type port: int
         @return:
         """
         if not self._check_port(port):
@@ -160,16 +222,32 @@ class Init(cmd.Cmd):
         thread.start()
 
     def do_conn(self, args):
+        """
+        conn - Connect to a Server from CMD:
+
+            Use:
+                ~> conn [host] [port]
+            Example
+                ~> conn 192.168.0.1 8085
+
+            @param host: Server's Hostname or IP
+            @type host: str
+            @param port: Server's port
+            @type port: int
+
+            When you try to connect a message will be displayed
+            to make you know that it is attempting to connect to server
+            e.g.:
+                connecting to 192.168.0.21:8091
+
+            If a connection was successful, you (and server), will be
+            notified, e.g.:
+                Now connected to [server's username]
+        """
         param = self.get_params(args)
         if len(param) < 2:
             raise TypeError
         self.conn(param[0], int(param[1]))
-
-    def do_setuser(self, args):
-        param = self.get_params(args)
-        if len(param) != 1:
-            raise TypeError
-        self.__user = args[0]
 
     # Overwritten functions from cmd class
     def console(self):
@@ -198,8 +276,9 @@ class Init(cmd.Cmd):
     def do_EOF(self, args):
         """
         Exit from cmdloop
-        @param line: arguments
-        @type line: str
+        Also available by pressing Ctrl + d
+        @param args: arguments
+        @type args: str
         @return:
         """
         return True
@@ -207,8 +286,8 @@ class Init(cmd.Cmd):
     def do_exit(self, args):
         """
         Exit from cmdloop
-        @param line: arguments
-        @type line: str
+        @param args: arguments
+        @type args: str
         @return:
         """
         return self.do_EOF(args)
@@ -222,7 +301,8 @@ if __name__ == "__main__":
         NARGS = len(sys.argv)
         if NARGS > 1:
             init.onecmd(' '.join(sys.argv[1:]))
-            init.cmdloop()
+            if sys.argv[1] != 'help':
+                init.cmdloop()
         else:
             init.cmdloop()
     except KeyboardInterrupt:
