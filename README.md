@@ -42,16 +42,16 @@ python main.py conn [server_ip] [server_port]
 - [x] Se debe asignar un hilo de ejecución a cada conversación, ya sea entrante o saliente.
 - [x] Cada objeto debe tener un socket servidor para recibir peticiones de conversación.
 - [x] Cuando un objeto desee iniciar una conversación comenzará una conexión a un socket de otro objeto utilizando un socket cliente.
-- [ ] Cada objeto debe tener un archivo de BD que utilizará para almacenamiento de mensajes y de llaves, este archivo debe estar en la misma carpeta que el código.py que crea el objeto.
+- [x] Cada objeto debe tener un archivo de BD que utilizará para almacenamiento de mensajes y de llaves, este archivo debe estar en la misma carpeta que el código.py que crea el objeto.
 - [x] Las direcciones y puertos del servidor de otros objetos son introducidos de manera manual.
 - [x] Cuando  los  sockets  establecen  comunicación,  el  socketcliente  envíasu  nombre  y  llave públicaal socketservidor, este responde con su nombre yllave pública.
-- [x] Cuando se ha llevado a cabo el intercambio de llaves públicas, se comienza la comunicación segura de acuerdo al diagrama de comunicación
+- [ ] Cuando se ha llevado a cabo el intercambio de llaves públicas, se comienza la comunicación segura de acuerdo al diagrama de comunicación
 
 ### ToDo:
-- [ ] Add Thread blocking in database operations
+- [x] Add Thread blocking in database operations
 - [ ] Functions to read messages from database
 - [x] function to get connected users
 - [x] Tidy the code up 
 - [x] Add docs
 - [ ] Cypher and Decrypt functions on messages
-- [ ] Delete database when leaving
+- [x] Delete database when leaving
