@@ -2,10 +2,10 @@
 Conn file, class for manage connection to servers
 """
 import socket
-from utils import ScktUtils
+from utils.scktUtils import scktUtils
 
 
-class Conn(ScktUtils):
+class Conn(scktUtils):
     """
     Connect to socket class
     """
@@ -23,7 +23,6 @@ class Conn(ScktUtils):
         logger
     ):
         """
-
         @param host: Server's hostname
         @type host: str
         @param port: Server's port

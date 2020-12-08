@@ -3,11 +3,11 @@ Socket servidor
 """
 
 import socket
-from utils import ScktUtils
 from concurrent.futures import ThreadPoolExecutor
+from utils.scktUtils import scktUtils
 
 
-class Server(ScktUtils):
+class Server(scktUtils):
 
     def __init__(
         self,
