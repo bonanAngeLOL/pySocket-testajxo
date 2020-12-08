@@ -288,7 +288,6 @@ class Init(cmd.Cmd):
         Exit from cmdloop
         @param args: arguments
         @type args: str
-        @return:
         """
         return self.do_EOF(args)
 

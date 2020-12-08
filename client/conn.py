@@ -1,5 +1,5 @@
 """
-Connect
+Conn file, class for manage connection to servers
 """
 import socket
 import json
@@ -7,7 +7,7 @@ import json
 
 class Conn:
     """
-    Connect to socket
+    Connect to socket class
     """
     __servers = {}
     __prepared_message: dict = None
@@ -22,6 +22,17 @@ class Conn:
         dbconn,
         logger
     ):
+        """
+
+        @param host: Server's hostname
+        @type host: str
+        @param port: Server's port
+        @type port: int
+        @param dbconn: Database connection
+        @type dbconn: object
+        @param logger: Configured Logger instance
+        @type logger: logging.Logger
+        """
         self.__host = host
         self.__port = port
         self.__dbconn = dbconn
@@ -34,7 +45,7 @@ class Conn:
     @classmethod
     def __get_stream(cls, conn: object) -> dict:
         """
-        Gets info from recv and decodes it as JSON
+        Gets info from recv and decodes it as JSON to dict
         @param conn : socket
         @return dict
         """
@@ -46,6 +57,16 @@ class Conn:
         return stream
 
     def prepare_message(self, message: str, recipient: str, sender: str):
+        """
+        Function to prepare a message to be sent to server, and assign it to
+        self.__prepared_message
+        @param message: Message body
+        @type message: str
+        @param recipient: Recipient name
+        @type recipient: str
+        @param sender: Sender name
+        @type sender: str
+        """
         self.__prepared_message = {
             "command": "send",
             "user": sender,
@@ -53,13 +74,23 @@ class Conn:
         }
 
     def prepare_identity(self, user, pk, sport):
+        """
+        Prepare identity info to be sent to client
+        as connect response
+        @param user: username
+        @type user: str
+        @param pk: public key
+        @type pk: str
+        @param sport: Client's Server port, where client listens requests
+        @type sport: str
+        """
         self.__user = user
         self.__pk = pk
         self.__sport = sport
 
     def send_to(self, info: dict, recipient: socket.socket) -> bool:
         """
-        Send info formatted as JSON with separator to connection
+        Send info formatted as JSON
         @param info: dict
         @param recipient: socket.socket
         @return bool
@@ -71,6 +102,12 @@ class Conn:
             return False
 
     def __action(self):
+        """
+        Executes requests, based on instance configuration
+        If a message is prepared it will try to send it
+        if not then it'll try to connect to server and
+        wait for a response
+        """
         if self.__prepared_message is None:
             nmessage = {
                 "command": "connect",
@@ -102,6 +139,10 @@ class Conn:
         return False
 
     def __sending(self):
+        """
+        This function was declared to manage requests to be sent to server
+        currently only executes action
+        """
         self.__action()
         self.__skt.shutdown(0)
         self.__skt.close()
@@ -116,5 +157,6 @@ class Conn:
         try:
             self.__skt.connect((self.__host, self.__port))
         except OSError:
+            self.__logger.debug("cannot connect to %s:%i", self.__host, self.__port)
             return False
         self.__sending()

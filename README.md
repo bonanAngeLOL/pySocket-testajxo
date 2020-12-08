@@ -52,5 +52,6 @@ python main.py conn [server_ip] [server_port]
 - [ ] Functions to read messages from database
 - [x] function to get connected users
 - [x] Tidy the code up 
-- [ ] Add docs
+- [x] Add docs
 - [ ] Cypher and Decrypt functions on messages
+- [ ] Delete database when leaving

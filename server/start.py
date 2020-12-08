@@ -18,6 +18,19 @@ class Server:
         dbconn,
         logger
     ):
+        """
+
+        @param host: Server's hostname
+        @type host: str
+        @param port: Server's port
+        @type port: int
+        @param user: Server's username
+        @type user: str
+        @param dbconn: Database connection
+        @type dbconn: object
+        @param logger: Configured Logger instance
+        @type logger: logging.Logger
+        """
         self.__host = host
         self.__port = port
         self.__user = user
@@ -33,6 +46,10 @@ class Server:
     def listen_client(self, conn, addr):
         """
         Listening to client
+        @param addr: address info from accepted connection
+        @type addr: tuple
+        @param conn: Connection socket object
+        @type conn: socket.socket
         """
         while True:
             message = self.__get_stream(conn)
@@ -41,12 +58,6 @@ class Server:
                 addr[0],
                 message
             )
-
-    def add_user(self, ip, port, username):
-        """
-        Set user
-        """
-        self.__usuarios[username] = (ip, port)
 
     @classmethod
     def __get_stream(cls, conn: object) -> dict:
@@ -64,7 +75,7 @@ class Server:
 
     def send_to(self, info: dict, recipient: socket.socket) -> bool:
         """
-        Send info formatted as JSON with separator to connection
+        Send info formatted as JSON
         @param info: dict
         @param recipient: socket.socket
         @return bool
@@ -76,6 +87,14 @@ class Server:
             return False
 
     def action(self, conn, addr) -> bool:
+        """
+        Executes actions accordingly to user command requested
+        @param conn: Connection
+        @type conn: socket.socket
+        @param addr: Address info from accepted connection
+        @type addr: tuple
+        @return: bool
+        """
         data = self.__get_stream(conn)
         if data is None or data == '':
             conn.close()
@@ -132,6 +151,11 @@ class Server:
         return False
 
     def __listening(self, executor: object):
+        """
+        Listening cycle
+        @param executor: Thread manager
+        @type executor: ThreadPoolExecutor
+        """
         while True:
             # Get connection
             conn, addr = self.__skt.accept()
@@ -140,6 +164,10 @@ class Server:
             executor.submit(self.action, conn, addr)
 
     def start(self) -> bool:
+        """
+        Start routine
+        @return: bool
+        """
         self.__skt.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
             self.__skt.bind((self.__host, self.__port))

@@ -1,5 +1,4 @@
 import sqlite3
-import traceback
 
 
 class SqliteConn:
@@ -43,6 +42,10 @@ class SqliteConn:
     }
 
     def __init__(self, database: str):
+        """
+        @param database: database name
+        @type database: str
+        """
         self.__conn = sqlite3.connect(database, check_same_thread=False)
         self.__cursor = self.__conn.cursor()
         self.__run_query(self.__user)
@@ -59,8 +62,10 @@ class SqliteConn:
         """
         Insertar un registro en la base de datos, regresa el Id de registro
 
-        @param params : tuple
-        @param table: str
+        @param params: Information to be stored in db
+        @type params: tuple
+        @param table: table name
+        @type table: str
         @return: int
         """
         if table not in self.__inserting.keys():
@@ -72,8 +77,10 @@ class SqliteConn:
         """
         Obtener un registro mediante en ID
 
-        @param idn: int
-        @param table: str
+        @param idn: Id of object
+        @type idn: int
+        @param table: table name
+        @type table: str
         @return tuple
         """
         if table not in self.__selecting_id.keys():
@@ -86,12 +93,17 @@ class SqliteConn:
     def get_all(self) -> list:
         """
         Obtener todos los registros de una tabla
-
         @return list
         """
         return self.__run_query("SELECT * FROM users")
 
     def get_user_by_name(self, name: str):
+        """
+        Querying user info by their name
+        @param name: username
+        @type name: str
+        @return:
+        """
         result = self.__run_query(
             "SELECT * FROM user WHERE username = ?",
             (name, )
@@ -101,6 +113,13 @@ class SqliteConn:
         return None
 
     def connected_user(self, name: str, addr: str):
+        """
+        Get user information from stored users
+        @param name: username
+        @type name: str
+        @param addr: str
+        @return:
+        """
         result = self.__run_query(
             "SELECT * FROM user WHERE username = ? and addr = ?",
             (name, addr)
@@ -109,7 +128,13 @@ class SqliteConn:
             return result[0]
         return None
 
-    def get_names(self, name: str):
+    def get_names(self, name: str) -> list:
+        """
+        Query a list of user whose username start with
+        a given string
+        @param name: username
+        @return: list
+        """
         return list(
             map(
                 lambda name_r: name_r[0],
