@@ -3,7 +3,7 @@ ErrorM="\n\nAn error happened, check the install instructions at echo https://gi
 echo -e "\n\nInstalling ... proyect from GitHub repository\n\n"
 git clone https://github.com/bonanAngeLOL/pySocket-testajxo.git
 if [ $? -eq 0 ]; then
-    echo "\n\n!!!!!!Repository cloned\n\n"
+    echo -e "\n\n!!!!!!Repository cloned\n\n"
 else
     echo -e $ErrorM
     echo -e "\n\n!!!!Could not clone repository\n\n"

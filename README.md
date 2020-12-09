@@ -48,10 +48,12 @@ source venv/bin/activate && pip install -r requirements.txt
 
 ## Run
 
-First of all open a terminal, and source to venv from bash.
+First of all open a terminal, and source to venv from bash. 
+Then just run the main.py file (instructions below). 
 
 ```bash
 cd /path/to/proyecto && source venv/bin/activate
+python main.py init [ip] [port] [username]
 ```
 
 But basically, the process is:
