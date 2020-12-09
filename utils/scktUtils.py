@@ -1,4 +1,5 @@
 import json
+from typing import Union
 
 
 class scktUtils:
@@ -6,7 +7,8 @@ class scktUtils:
     def __init__(*arg):
         pass
 
-    def _get_stream(self, conn: object) -> dict:
+    @classmethod
+    def _get_stream(cls, conn: object) -> Union[dict, None]:
         """
         Gets info from recv and decodes it as JSON to dict
         @param conn : socket
@@ -19,7 +21,8 @@ class scktUtils:
             return None
         return stream
 
-    def _send_to(self, info: dict, recipient: object) -> bool:
+    @classmethod
+    def _send_to(cls, info: dict, recipient: object) -> bool:
         """
         Send info formatted as JSON
         @param info: dict
@@ -31,4 +34,3 @@ class scktUtils:
             return True
         except json.decoder.JSONDecodeError:
             return False
-
