@@ -32,8 +32,8 @@ class Init(cmd.Cmd):
     def __init__(
                 self,
                 logger: logging.Logger = logging.getLogger(),
-                dbconn: SqliteConn =SqliteConn(
-                    datetime.datetime.now().strftime(__dbname)
+                dbconn: SqliteConn = SqliteConn(
+                    __dbname
                 ),
                 crypt_util: crypto = ECCcrypt()
             ):
@@ -105,7 +105,7 @@ class Init(cmd.Cmd):
             return False
         self.__sport = port
         self.__user = user
-        self.__dbconn.insert((user, host, self.__pubk, port, self.__privk), "user")
+        self.__dbconn.insert((user, host, self.__pubk, port, ''), "user")
         proc = Process(
             target=Server(
                 host,
