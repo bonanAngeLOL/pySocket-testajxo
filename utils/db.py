@@ -1,5 +1,6 @@
 import sqlite3
 from threading import Lock
+from typing import Union
 
 
 class SqliteConn:
@@ -79,7 +80,7 @@ class SqliteConn:
             self.__run_query(self.__inserting[table], params)
         return self.__cursor.lastrowid
 
-    def get_by_id(self, idn: int, table: str) -> tuple:
+    def get_by_id(self, idn: int, table: str) -> Union[tuple, None]:
         """
         Obtener un registro mediante en ID
 
@@ -179,5 +180,5 @@ class SqliteConn:
             self.__cursor.execute(query, parameters)
             self.__conn.commit()
         except Exception:
-            return ()
+            return []
         return self.__cursor.fetchall()
