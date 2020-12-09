@@ -50,5 +50,3 @@ class User:
         @return str
         """
         return self.__username
-
-
