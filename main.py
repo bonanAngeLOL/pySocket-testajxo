@@ -307,8 +307,8 @@ class Init(cmd.Cmd):
         except TypeError as err:
             self.__logger.debug("%s", "Invalid arguments")
             self.__logger.debug("%s", err)
-            import traceback
-            traceback.print_exc()
+            # import traceback
+            # traceback.print_exc()
             return False
 
     def emptyline(self):
