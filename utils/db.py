@@ -1,6 +1,10 @@
 import sqlite3
 from threading import Lock
 from typing import Union
+from .storeidentity import StoreIdentity
+from .storesignedprek import StoreSignedPrek
+from .storeprek import StorePrek
+from .storesession import StoreSession
 
 
 class SqliteConn:
@@ -167,6 +171,19 @@ class SqliteConn:
                 )
             )
         )
+
+    def identity(self):
+        return StoreIdentity(self.__conn)
+
+    def signed_prekey(self):
+        return StoreSignedPrek(self.__conn)
+
+    def prekey(self):
+        return StorePrek(self.__conn)
+
+    def session(self):
+        return StoreSession(self.__conn)
+
 
     def __run_query(self, query: str, parameters=()) -> list:
         """
