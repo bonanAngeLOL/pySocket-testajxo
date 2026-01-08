@@ -13,5 +13,5 @@ pkg-resources==0.0.0
 pyasn1==0.4.8
 pycparser==2.20
 pycryptodome==3.9.9
-rsa==4.6
+rsa==4.7
 toolz==0.11.1
